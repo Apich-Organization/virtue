@@ -114,19 +114,38 @@ impl Generics {
         result
     }
 
-    pub(crate) fn impl_generics_with_additional_lifetimes(
+    pub(crate) fn impl_generics_with_additional(
         &self,
-        lifetime: &[String],
+        lifetimes: &[String],
+        types: &[String],
     ) -> StreamBuilder {
         let mut result = StreamBuilder::new();
-        for (idx, lt) in lifetime.iter().enumerate() {
-            result.punct(if idx == 0 { '<' } else { ',' });
+        result.punct('<');
+        let mut is_first = true;
+        for lt in lifetimes.iter() {
+            if !is_first {
+                result.punct(',');
+            } else {
+                is_first = false;
+            }
             result.lifetime_str(lt);
         }
 
         for generic in self.iter() {
-            result.punct(',');
+            if !is_first {
+                result.punct(',');
+            } else {
+                is_first = false;
+            }
             generic.append_to_result_with_constraints(&mut result);
+        }
+        for ty in types {
+            if !is_first {
+                result.punct(',');
+            } else {
+                is_first = false;
+            }
+            result.ident_str(ty);
         }
 
         result.punct('>');

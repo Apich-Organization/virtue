@@ -309,4 +309,63 @@ mod test {
             .collect::<String>()
         );
     }
+
+    #[test]
+    fn impl_for_with_trait_generics() {
+        let mut generator = Generator::new(
+            Ident::new("StructOrEnum", Span::call_site()),
+            Generics::try_take(&mut token_stream("<'a>")).unwrap(),
+            None,
+        );
+        let _ = generator.impl_for("Foo").with_trait_generics(["&'a str"]);
+        let output = generator.finish().unwrap();
+        assert_eq!(
+            output
+                .into_iter()
+                .map(|v| v.to_string())
+                .collect::<String>(),
+            token_stream("impl<'a> Foo<&'a str> for StructOrEnum<'a> { }")
+                .map(|v| v.to_string())
+                .collect::<String>(),
+        );
+    }
+
+    #[test]
+    fn impl_for_with_impl_generics() {
+        //with simple generics
+        let mut generator = Generator::new(
+            Ident::new("StructOrEnum", Span::call_site()),
+            Generics::try_take(&mut token_stream("<T1, T2>")).unwrap(),
+            None,
+        );
+        let _ = generator.impl_for("Foo").with_impl_generics(["Bar"]);
+
+        let output = generator.finish().unwrap();
+        assert_eq!(
+            output
+                .into_iter()
+                .map(|v| v.to_string())
+                .collect::<String>(),
+            token_stream("impl<T1, T2, Bar> Foo for StructOrEnum<T1, T2> { }")
+                .map(|v| v.to_string())
+                .collect::<String>()
+        );
+        // with lifetimes
+        let mut generator = Generator::new(
+            Ident::new("StructOrEnum", Span::call_site()),
+            Generics::try_take(&mut token_stream("<'alpha, 'beta>")).unwrap(),
+            None,
+        );
+        let _ = generator.impl_for("Foo").with_impl_generics(["Bar"]);
+        let output = generator.finish().unwrap();
+        assert_eq!(
+            output
+                .into_iter()
+                .map(|v| v.to_string())
+                .collect::<String>(),
+            token_stream("impl<'alpha, 'beta, Bar> Foo for StructOrEnum<'alpha, 'beta> { }")
+                .map(|v| v.to_string())
+                .collect::<String>()
+        );
+    }
 }

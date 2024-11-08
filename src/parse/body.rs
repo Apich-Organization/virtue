@@ -364,6 +364,7 @@ pub struct EnumVariant {
     /// - `Baz = 5`
     /// - `Baz(i32) = 5`
     /// - `Baz { a: i32} = 5`
+    ///
     /// In either case this value will be `Some(Literal::i32(5))`
     pub value: Option<Literal>,
     /// The attributes of this variant

@@ -13,7 +13,8 @@ pub struct ImplFor<'a, P: Parent> {
     type_name: StringOrIdent,
     trait_name: Option<StringOrIdent>,
     lifetimes: Option<Vec<String>>,
-    generics: Option<Vec<String>>,
+    trait_generics: Option<Vec<String>>,
+    impl_generics: Vec<String>,
     consts: Vec<StreamBuilder>,
     custom_generic_constraints: Option<GenericConstraints>,
     impl_types: Vec<StreamBuilder>,
@@ -33,7 +34,8 @@ impl<'a, P: Parent> ImplFor<'a, P> {
             trait_name,
             type_name,
             lifetimes: None,
-            generics: None,
+            trait_generics: None,
+            impl_generics: vec![],
             consts: Vec::new(),
             custom_generic_constraints: None,
             impl_types: Vec::new(),
@@ -100,7 +102,30 @@ impl<'a, P: Parent> ImplFor<'a, P> {
         ITER: IntoIterator,
         ITER::Item: Into<String>,
     {
-        self.generics = Some(generics.into_iter().map(Into::into).collect());
+        self.trait_generics = Some(generics.into_iter().map(Into::into).collect());
+        self
+    }
+
+    /// Add generic parameters to the impl block.
+    ///```
+    /// # use virtue::prelude::Generator;
+    /// # let mut generator = Generator::with_name("Bar");
+    /// generator.impl_for("Foo")
+    ///          .with_impl_generics(["Baz"]);
+    /// # generator.assert_eq("impl < Baz > Foo for Bar { }");
+    /// # Ok::<_, virtue::Error>(())
+    /// ```
+    ///
+    /// Generates:
+    /// ```ignore
+    /// impl<Baz> Foo for Bar { }
+    /// ```
+    pub fn with_impl_generics<ITER>(mut self, generics: ITER) -> Self
+    where
+        ITER: IntoIterator,
+        ITER::Item: Into<String>,
+    {
+        self.impl_generics = generics.into_iter().map(Into::into).collect();
         self
     }
 
@@ -282,20 +307,24 @@ impl<P: Parent> Drop for ImplFor<'_, P> {
 impl<P: Parent> ImplFor<'_, P> {
     fn generate_impl_definition(&mut self, builder: &mut StreamBuilder) {
         builder.ident_str("impl");
+
+        let impl_generics = self.impl_generics.as_slice();
         if let Some(lifetimes) = &self.lifetimes {
             if let Some(generics) = self.generator.generics() {
-                builder.append(generics.impl_generics_with_additional_lifetimes(lifetimes));
+                builder.append(generics.impl_generics_with_additional(lifetimes, impl_generics));
             } else {
-                append_lifetimes_and_generics(builder, lifetimes, &[]);
+                append_lifetimes_and_generics(builder, lifetimes, impl_generics);
             }
         } else if let Some(generics) = self.generator.generics() {
-            builder.append(generics.impl_generics());
+            builder.append(generics.impl_generics_with_additional(&[], impl_generics));
+        } else if !impl_generics.is_empty() {
+            append_lifetimes_and_generics(builder, &[], impl_generics)
         }
         if let Some(t) = &self.trait_name {
             builder.push_parsed(t.to_string()).unwrap();
 
             let lifetimes = self.lifetimes.as_deref().unwrap_or_default();
-            let generics = self.generics.as_deref().unwrap_or_default();
+            let generics = self.trait_generics.as_deref().unwrap_or_default();
             append_lifetimes_and_generics(builder, lifetimes, generics);
             builder.ident_str("for");
         }
@@ -333,7 +362,7 @@ fn append_lifetimes_and_generics(
         if idx > 0 || !lifetimes.is_empty() {
             builder.punct(',');
         }
-        builder.ident_str(gen);
+        builder.push_parsed(gen).unwrap();
     }
 
     builder.punct('>');
