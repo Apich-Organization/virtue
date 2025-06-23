@@ -194,7 +194,7 @@ impl Generator {
     }
 }
 
-#[cfg(feature = "proc-macro2")]
+#[cfg(test)]
 impl Generator {
     /// Create a new generator with the name `name`. This is useful for testing purposes in combination with the `assert_eq` function.
     pub fn with_name(name: &str) -> Self {
@@ -248,9 +248,7 @@ impl super::Parent for Generator {
 
 #[cfg(test)]
 mod test {
-    use proc_macro2::Span;
-
-    use crate::token_stream;
+    use crate::{prelude::Span, token_stream};
 
     use super::*;
 

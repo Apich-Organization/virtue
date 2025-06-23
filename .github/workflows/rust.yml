@@ -64,7 +64,7 @@
                 "name": "Install Rust ${{ matrix.rust }}",
               },
               {
-                "run": "cargo test --all --features proc-macro2",
+                "run": "cargo test --all",
                 "name": "Run `cargo test`",
                 "env": { "RUSTFLAGS": "-D warnings" },
               },

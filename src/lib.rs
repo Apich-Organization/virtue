@@ -75,6 +75,9 @@ pub mod generate;
 pub mod parse;
 pub mod utils;
 
+#[cfg(test)]
+pub mod test_shim;
+
 /// Result alias for virtue's errors
 pub type Result<T = ()> = std::result::Result<T, Error>;
 
@@ -88,22 +91,21 @@ pub mod prelude {
     };
     pub use crate::{Error, Result};
 
-    #[cfg(any(test, feature = "proc-macro2"))]
-    pub use proc_macro2::*;
+    #[cfg(test)]
+    pub use crate::test_shim::*;
 
-    #[cfg(not(any(test, feature = "proc-macro2")))]
+    #[cfg(not(test))]
     extern crate proc_macro;
-    #[cfg(not(any(test, feature = "proc-macro2")))]
+    #[cfg(not(test))]
     pub use proc_macro::*;
 }
 
 #[cfg(test)]
 pub(crate) fn token_stream(
     s: &str,
-) -> std::iter::Peekable<impl Iterator<Item = proc_macro2::TokenTree>> {
+) -> std::iter::Peekable<impl Iterator<Item = prelude::TokenTree>> {
     use std::str::FromStr;
-
-    let stream = proc_macro2::TokenStream::from_str(s)
+    let stream = prelude::TokenStream::from_str(s)
         .unwrap_or_else(|e| panic!("Could not parse code: {:?}\n{:?}", s, e));
     stream.into_iter().peekable()
 }
