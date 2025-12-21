@@ -1,4 +1,4 @@
-# Code of Conduct: Bincode-next
+# Code of Conduct: Bincode-next (virtue)
 
 ## 1. Introduction and Purpose
 
