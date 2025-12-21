@@ -1,11 +1,11 @@
 [package]
-name = "virtue"
-version = "0.0.19"
+name = "virtue-next"
+version = "0.0.20"
 edition = "2021"
 description = "A sinless derive macro helper"
-license = "MIT"
+license = "MIT or Apache-2.0"
 documentation = "https://docs.rs/virtue"
-repository = "https://github.com/bincode-org/virtue"
+repository = "https://github.com/Apich-Organization/virtue"
 readme = "README.md"
 
 [dev-dependencies]
