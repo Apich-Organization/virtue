@@ -16,3 +16,20 @@ proc-macro2 = { version = "1.0", optional = true }
 
 [workspace]
 members = ["test", "test/derive"]
+
+[profile.bench]
+codegen-units = 1
+debug = 1
+lto = true
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+opt-level = 3
+strip = true
+
+[profile.dev]
+lto = false
+opt-level = 0
+debug = true
