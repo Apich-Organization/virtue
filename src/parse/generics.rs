@@ -563,10 +563,10 @@ impl GenericConstraints {
         constraint: impl AsRef<str>,
     ) -> Result<()> {
         let mut builder = StreamBuilder::new();
-        let last_constraint_was_comma = self.constraints.last().map_or(
-            false,
-            |l| matches!(l, TokenTree::Punct(c) if c.as_char() == ','),
-        );
+        let last_constraint_was_comma = self
+            .constraints
+            .last()
+            .is_some_and(|l| matches!(l, TokenTree::Punct(c) if c.as_char() == ','));
         if !self.constraints.is_empty() && !last_constraint_was_comma {
             builder.punct(',');
         }

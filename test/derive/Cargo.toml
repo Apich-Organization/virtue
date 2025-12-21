@@ -1,6 +1,6 @@
 [package]
-name = "virtue_test_derive"
-version = "0.1.0"
+name = "virtue_test_derive-next"
+version = "0.1.1"
 edition = "2021"
 publish = false
 
@@ -8,4 +8,4 @@ publish = false
 proc-macro = true
 
 [dependencies]
-virtue = { path = "../.." }
+virtue = { package = "virtue-next", path = "../.." }

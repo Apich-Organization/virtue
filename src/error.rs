@@ -123,7 +123,7 @@ impl Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::UnknownDataType(_) => {
                 write!(fmt, "Unknown data type, only enum and struct are supported")

@@ -44,17 +44,17 @@ impl<'a, P: Parent> GenerateMod<'a, P> {
     }
 
     /// Generate a struct with the given name. See [`GenStruct`] for more info.
-    pub fn generate_struct(&mut self, name: impl Into<String>) -> GenStruct<Self> {
+    pub fn generate_struct(&mut self, name: impl Into<String>) -> GenStruct<'_, Self> {
         GenStruct::new(self, name)
     }
 
     /// Generate an enum with the given name. See [`GenEnum`] for more info.
-    pub fn generate_enum(&mut self, name: impl Into<String>) -> GenEnum<Self> {
+    pub fn generate_enum(&mut self, name: impl Into<String>) -> GenEnum<'_, Self> {
         GenEnum::new(self, name)
     }
 
     /// Generate an `impl <name>` implementation. See [`Impl`] for more information.
-    pub fn r#impl(&mut self, name: impl Into<String>) -> Impl<Self> {
+    pub fn r#impl(&mut self, name: impl Into<String>) -> Impl<'_, Self> {
         Impl::new(self, name)
     }
 
@@ -63,7 +63,7 @@ impl<'a, P: Parent> GenerateMod<'a, P> {
     /// Alias for [`impl`] which doesn't need a `r#` prefix.
     ///
     /// [`impl`]: #method.impl
-    pub fn generate_impl(&mut self, name: impl Into<String>) -> Impl<Self> {
+    pub fn generate_impl(&mut self, name: impl Into<String>) -> Impl<'_, Self> {
         Impl::new(self, name)
     }
 }

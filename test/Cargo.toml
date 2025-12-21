@@ -1,11 +1,11 @@
 [package]
-name = "virtue_test"
-version = "0.0.0"
+name = "virtue_test-next"
+version = "0.0.1"
 edition = "2021"
 publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-virtue_test_derive = { path = "derive" }
+virtue_test_derive = { package = "virtue_test_derive-next", path = "derive" }
 bitflags = "2.3"

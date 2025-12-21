@@ -298,12 +298,12 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     }
 
     /// Add an `impl <name> for <enum>`
-    pub fn impl_for(&mut self, name: impl Into<StringOrIdent>) -> ImplFor<Self> {
+    pub fn impl_for(&mut self, name: impl Into<StringOrIdent>) -> ImplFor<'_, Self> {
         ImplFor::new(self, name.into(), None)
     }
 
     /// Generate an `impl <name>` implementation. See [`Impl`] for more information.
-    pub fn r#impl(&mut self) -> Impl<Self> {
+    pub fn r#impl(&mut self) -> Impl<'_, Self> {
         Impl::with_parent_name(self)
     }
 
@@ -312,7 +312,7 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// Alias for [`impl`] which doesn't need a `r#` prefix.
     ///
     /// [`impl`]: #method.impl
-    pub fn generate_impl(&mut self) -> Impl<Self> {
+    pub fn generate_impl(&mut self) -> Impl<'_, Self> {
         Impl::with_parent_name(self)
     }
 }
@@ -555,7 +555,7 @@ impl EnumValue {
         &mut self,
         name: impl Into<String>,
         ty: impl Into<String>,
-    ) -> FieldBuilder<Self> {
+    ) -> FieldBuilder<'_, Self> {
         let mut fields = FieldBuilder::from(&mut self.fields);
         fields.add_field(name, ty);
         fields

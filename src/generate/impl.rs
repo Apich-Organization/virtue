@@ -78,7 +78,7 @@ impl<'a, P: Parent> Impl<'a, P> {
     /// ```
     ///
     /// See [`FnBuilder`] for more options, as well as information on how to fill the function body.
-    pub fn generate_fn(&mut self, name: impl Into<String>) -> FnBuilder<Self> {
+    pub fn generate_fn(&mut self, name: impl Into<String>) -> FnBuilder<'_, Self> {
         FnBuilder::new(self, name)
     }
 
@@ -101,7 +101,11 @@ impl<'a, P: Parent> Impl<'a, P> {
     /// impl Foo for <struct or enum> {
     ///     const BAR: u8 = 5;
     /// }
-    pub fn generate_const(&mut self, name: impl Into<String>, ty: impl Into<String>) -> GenConst {
+    pub fn generate_const(
+        &mut self,
+        name: impl Into<String>,
+        ty: impl Into<String>,
+    ) -> GenConst<'_> {
         GenConst::new(&mut self.consts, name, ty)
     }
 }

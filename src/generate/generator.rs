@@ -37,7 +37,7 @@ impl Generator {
     /// Generate an `impl <target_name>` implementation. See [`Impl`] for more information.
     ///
     /// This will default to the type that is associated with this generator. If you need to generate an impl for another type you can use `impl_for_other_type`
-    pub fn r#impl(&mut self) -> Impl<Self> {
+    pub fn r#impl(&mut self) -> Impl<'_, Self> {
         Impl::with_parent_name(self)
     }
 
@@ -46,14 +46,14 @@ impl Generator {
     /// Alias for [`impl`] which doesn't need a `r#` prefix.
     ///
     /// [`impl`]: #method.impl
-    pub fn generate_impl(&mut self) -> Impl<Self> {
+    pub fn generate_impl(&mut self) -> Impl<'_, Self> {
         Impl::with_parent_name(self)
     }
 
     /// Generate an `for <trait_name> for <target_name>` implementation. See [ImplFor] for more information.
     ///
     /// This will default to the type that is associated with this generator. If you need to generate an impl for another type you can use `impl_trait_for_other_type`
-    pub fn impl_for(&mut self, trait_name: impl Into<String>) -> ImplFor<Self> {
+    pub fn impl_for(&mut self, trait_name: impl Into<String>) -> ImplFor<'_, Self> {
         ImplFor::new(
             self,
             self.name.clone().into(),
@@ -71,7 +71,10 @@ impl Generator {
     /// // impl Foo { }
     /// # generator.assert_eq("impl Foo { }");
     /// ```
-    pub fn impl_for_other_type(&mut self, type_name: impl Into<StringOrIdent>) -> ImplFor<Self> {
+    pub fn impl_for_other_type(
+        &mut self,
+        type_name: impl Into<StringOrIdent>,
+    ) -> ImplFor<'_, Self> {
         ImplFor::new(self, type_name.into(), None)
     }
 
@@ -89,7 +92,7 @@ impl Generator {
         &mut self,
         trait_name: impl Into<StringOrIdent>,
         type_name: impl Into<StringOrIdent>,
-    ) -> ImplFor<Self> {
+    ) -> ImplFor<'_, Self> {
         ImplFor::new(self, type_name.into(), Some(trait_name.into()))
     }
 
@@ -125,7 +128,7 @@ impl Generator {
         &mut self,
         trait_name: T,
         lifetimes: ITER,
-    ) -> ImplFor<Self>
+    ) -> ImplFor<'_, Self>
     where
         ITER: IntoIterator,
         ITER::Item: Into<String>,
@@ -136,17 +139,17 @@ impl Generator {
     }
 
     /// Generate a struct with the given name. See [`GenStruct`] for more info.
-    pub fn generate_struct(&mut self, name: impl Into<String>) -> GenStruct<Self> {
+    pub fn generate_struct(&mut self, name: impl Into<String>) -> GenStruct<'_, Self> {
         GenStruct::new(self, name)
     }
 
     /// Generate an enum with the given name. See [`GenEnum`] for more info.
-    pub fn generate_enum(&mut self, name: impl Into<String>) -> GenEnum<Self> {
+    pub fn generate_enum(&mut self, name: impl Into<String>) -> GenEnum<'_, Self> {
         GenEnum::new(self, name)
     }
 
     /// Generate a `mod <name> { ... }`. See [`GenerateMod`] for more info.
-    pub fn generate_mod(&mut self, mod_name: impl Into<String>) -> GenerateMod<Self> {
+    pub fn generate_mod(&mut self, mod_name: impl Into<String>) -> GenerateMod<'_, Self> {
         GenerateMod::new(self, mod_name)
     }
 
