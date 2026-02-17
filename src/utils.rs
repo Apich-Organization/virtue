@@ -1,5 +1,5 @@
 //! Utility functions
-use crate::{prelude::*, Error};
+use crate::{Error, prelude::*};
 
 /// Parse a tagged attribute. This is very helpful for implementing [`FromAttribute`].
 ///

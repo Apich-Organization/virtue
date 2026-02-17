@@ -175,7 +175,8 @@ impl Generator {
                             return false;
                         }
                         path.push(format!("{}_{}.rs", self.target_name(), file_postfix));
-                        if let Ok(mut file) = std::fs::File::create(path) {
+                        let result = std::fs::File::create(path);
+                        if let Ok(mut file) = result {
                             let _ = file.write_all(self.stream.stream.to_string().as_bytes());
                             return true;
                         }
@@ -226,7 +227,9 @@ impl Generator {
 impl Drop for Generator {
     fn drop(&mut self) {
         if !self.stream.stream.is_empty() && !std::thread::panicking() {
-            eprintln!("WARNING: Generator dropped but the stream is not empty. Please call `.finish()` on the generator");
+            eprintln!(
+                "WARNING: Generator dropped but the stream is not empty. Please call `.finish()` on the generator"
+            );
         }
     }
 }

@@ -229,15 +229,15 @@ impl Generic {
     pub fn ident(&self) -> &Ident {
         match self {
             Self::Lifetime(lt) => &lt.ident,
-            Self::Generic(gen) => &gen.ident,
-            Self::Const(gen) => &gen.ident,
+            Self::Generic(r#gen) => &r#gen.ident,
+            Self::Const(r#gen) => &r#gen.ident,
         }
     }
 
     fn has_constraints(&self) -> bool {
         match self {
             Self::Lifetime(lt) => !lt.constraint.is_empty(),
-            Self::Generic(gen) => !gen.constraints.is_empty(),
+            Self::Generic(r#gen) => !r#gen.constraints.is_empty(),
             Self::Const(_) => true, // const generics always have a constraint
         }
     }
@@ -245,18 +245,18 @@ impl Generic {
     fn constraints(&self) -> Vec<TokenTree> {
         match self {
             Self::Lifetime(lt) => lt.constraint.clone(),
-            Self::Generic(gen) => gen.constraints.clone(),
-            Self::Const(gen) => gen.constraints.clone(),
+            Self::Generic(r#gen) => r#gen.constraints.clone(),
+            Self::Const(r#gen) => r#gen.constraints.clone(),
         }
     }
 
     fn append_to_result_with_constraints(&self, builder: &mut StreamBuilder) {
         match self {
             Self::Lifetime(lt) => builder.lifetime(lt.ident.clone()),
-            Self::Generic(gen) => builder.ident(gen.ident.clone()),
-            Self::Const(gen) => {
-                builder.ident(gen.const_token.clone());
-                builder.ident(gen.ident.clone())
+            Self::Generic(r#gen) => builder.ident(r#gen.ident.clone()),
+            Self::Const(r#gen) => {
+                builder.ident(r#gen.const_token.clone());
+                builder.ident(r#gen.ident.clone())
             }
         };
         if self.has_constraints() {
@@ -273,14 +273,14 @@ impl From<Lifetime> for Generic {
 }
 
 impl From<SimpleGeneric> for Generic {
-    fn from(gen: SimpleGeneric) -> Self {
-        Self::Generic(gen)
+    fn from(r#gen: SimpleGeneric) -> Self {
+        Self::Generic(r#gen)
     }
 }
 
 impl From<ConstGeneric> for Generic {
-    fn from(gen: ConstGeneric) -> Self {
-        Self::Const(gen)
+    fn from(r#gen: ConstGeneric) -> Self {
+        Self::Const(r#gen)
     }
 }
 
@@ -289,12 +289,16 @@ fn test_generics_try_take() {
     use crate::token_stream;
 
     assert!(Generics::try_take(&mut token_stream("")).unwrap().is_none());
-    assert!(Generics::try_take(&mut token_stream("foo"))
-        .unwrap()
-        .is_none());
-    assert!(Generics::try_take(&mut token_stream("()"))
-        .unwrap()
-        .is_none());
+    assert!(
+        Generics::try_take(&mut token_stream("foo"))
+            .unwrap()
+            .is_none()
+    );
+    assert!(
+        Generics::try_take(&mut token_stream("()"))
+            .unwrap()
+            .is_none()
+    );
 
     let stream = &mut token_stream("struct Foo<'a, T>()");
     let (data_type, ident) = super::DataType::take(stream).unwrap();
@@ -348,9 +352,11 @@ fn test_generics_try_take() {
     let (data_type, ident) = super::DataType::take(stream).unwrap();
     assert_eq!(data_type, super::DataType::Struct);
     assert_eq!(ident, "Baz");
-    assert!(Generics::try_take(stream)
-        .unwrap_err()
-        .is_invalid_rust_syntax());
+    assert!(
+        Generics::try_take(stream)
+            .unwrap_err()
+            .is_invalid_rust_syntax()
+    );
 
     let stream = &mut token_stream("struct Bar<A: FnOnce(&'static str) -> SomeStruct, B>");
     let (data_type, ident) = super::DataType::take(stream).unwrap();
@@ -417,9 +423,11 @@ impl Lifetime {
 fn test_lifetime_take() {
     use crate::token_stream;
     use std::panic::catch_unwind;
-    assert!(Lifetime::take(&mut token_stream("'a"))
-        .unwrap()
-        .is_ident("a"));
+    assert!(
+        Lifetime::take(&mut token_stream("'a"))
+            .unwrap()
+            .is_ident("a")
+    );
     assert!(catch_unwind(|| Lifetime::take(&mut token_stream("'0"))).is_err());
     assert!(catch_unwind(|| Lifetime::take(&mut token_stream("'("))).is_err());
     assert!(catch_unwind(|| Lifetime::take(&mut token_stream("')"))).is_err());

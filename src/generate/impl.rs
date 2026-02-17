@@ -1,4 +1,4 @@
-use super::{generate_item::FnParent, FnBuilder, GenConst, Generator, Parent, StreamBuilder};
+use super::{FnBuilder, GenConst, Generator, Parent, StreamBuilder, generate_item::FnParent};
 use crate::{
     parse::{GenericConstraints, Generics},
     prelude::{Delimiter, Result},
@@ -181,10 +181,15 @@ impl<'a, P: Parent> Drop for Impl<'a, P> {
         if let Some(generics) = self.parent.generics() {
             builder.append(generics.type_generics());
         }
-        if let Some(generic_constraints) = self.custom_generic_constraints.take() {
-            builder.append(generic_constraints.where_clause());
-        } else if let Some(generic_constraints) = self.parent.generic_constraints() {
-            builder.append(generic_constraints.where_clause());
+        match self.custom_generic_constraints.take() {
+            Some(generic_constraints) => {
+                builder.append(generic_constraints.where_clause());
+            }
+            _ => {
+                if let Some(generic_constraints) = self.parent.generic_constraints() {
+                    builder.append(generic_constraints.where_clause());
+                }
+            }
         }
 
         builder

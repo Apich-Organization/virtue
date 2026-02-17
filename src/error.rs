@@ -113,10 +113,12 @@ impl Error {
 // helper functions for the unit tests
 #[cfg(test)]
 impl Error {
+    /// helper functions for the unit tests
     pub fn is_unknown_data_type(&self) -> bool {
         matches!(self, Error::UnknownDataType(_))
     }
 
+    /// helper functions for the unit tests
     pub fn is_invalid_rust_syntax(&self) -> bool {
         matches!(self, Error::InvalidRustSyntax { .. })
     }

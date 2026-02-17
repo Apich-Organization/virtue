@@ -44,30 +44,40 @@ fn test_datatype_take() {
         }
     }
 
-    assert!(DataType::take(&mut token_stream("enum"))
-        .unwrap_err()
-        .is_invalid_rust_syntax());
+    assert!(
+        DataType::take(&mut token_stream("enum"))
+            .unwrap_err()
+            .is_invalid_rust_syntax()
+    );
     validate_output_eq("enum Foo", DataType::Enum, "Foo");
     validate_output_eq("enum Foo { }", DataType::Enum, "Foo");
     validate_output_eq("enum Foo { bar, baz }", DataType::Enum, "Foo");
     validate_output_eq("enum Foo<'a, T> { bar, baz }", DataType::Enum, "Foo");
 
-    assert!(DataType::take(&mut token_stream("struct"))
-        .unwrap_err()
-        .is_invalid_rust_syntax());
+    assert!(
+        DataType::take(&mut token_stream("struct"))
+            .unwrap_err()
+            .is_invalid_rust_syntax()
+    );
     validate_output_eq("struct Foo { }", DataType::Struct, "Foo");
     validate_output_eq("struct Foo { bar: u32, baz: u32 }", DataType::Struct, "Foo");
     validate_output_eq("struct Foo<'a, T> { bar: &'a T }", DataType::Struct, "Foo");
 
-    assert!(DataType::take(&mut token_stream("fn foo() {}"))
-        .unwrap_err()
-        .is_unknown_data_type());
+    assert!(
+        DataType::take(&mut token_stream("fn foo() {}"))
+            .unwrap_err()
+            .is_unknown_data_type()
+    );
 
-    assert!(DataType::take(&mut token_stream("() {}"))
-        .unwrap_err()
-        .is_invalid_rust_syntax());
+    assert!(
+        DataType::take(&mut token_stream("() {}"))
+            .unwrap_err()
+            .is_invalid_rust_syntax()
+    );
 
-    assert!(DataType::take(&mut token_stream(""))
-        .unwrap_err()
-        .is_invalid_rust_syntax());
+    assert!(
+        DataType::take(&mut token_stream(""))
+            .unwrap_err()
+            .is_invalid_rust_syntax()
+    );
 }

@@ -1,8 +1,8 @@
 use super::{GenEnum, GenStruct, Impl, Parent, StreamBuilder};
 use crate::{
+    Result,
     parse::Visibility,
     prelude::{Delimiter, Ident, Span},
-    Result,
 };
 
 /// Builder for generating a module with its contents.

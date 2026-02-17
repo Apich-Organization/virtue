@@ -34,8 +34,8 @@ pub use self::gen_struct::GenStruct;
 pub use self::generate_item::{FnBuilder, FnSelfArg, GenConst};
 pub use self::generate_mod::GenerateMod;
 pub use self::generator::Generator;
-pub use self::impl_for::ImplFor;
 pub use self::r#impl::Impl;
+pub use self::impl_for::ImplFor;
 pub use self::stream_builder::{PushParseError, StreamBuilder};
 
 /// Helper trait to make it possible to nest several builders. Internal use only.

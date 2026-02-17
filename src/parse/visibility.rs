@@ -1,6 +1,6 @@
 use super::utils::*;
-use crate::prelude::{Delimiter, TokenTree};
 use crate::Result;
+use crate::prelude::{Delimiter, TokenTree};
 use std::iter::Peekable;
 
 /// The visibility of a struct, enum, field, etc
@@ -43,7 +43,8 @@ impl Visibility {
                 // sometimes this is a group instead of an ident
                 // e.g. when used in `bitflags! {}`
                 let mut iter = group.stream().into_iter();
-                match (iter.next(), iter.next()) {
+                let tokens = (iter.next(), iter.next());
+                match tokens {
                     (Some(TokenTree::Ident(ident)), None) if ident_eq(&ident, "pub") => {
                         // Consume this token
                         assume_group(input.next());

@@ -2,9 +2,9 @@ use super::{
     AttributeContainer, Field, FieldBuilder, Impl, ImplFor, Parent, Path, StreamBuilder,
     StringOrIdent,
 };
+use crate::Result;
 use crate::parse::{Generic, Generics, Visibility};
 use crate::prelude::{Delimiter, Ident, Span, TokenStream};
-use crate::Result;
 
 /// Builder to generate an `enum <Name> { <value> { ... }, ... }`
 ///

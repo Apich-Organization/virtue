@@ -1,4 +1,4 @@
-use super::{generate_item::FnParent, FnBuilder, GenConst, Parent, StreamBuilder, StringOrIdent};
+use super::{FnBuilder, GenConst, Parent, StreamBuilder, StringOrIdent, generate_item::FnParent};
 use crate::{
     parse::{GenericConstraints, Generics},
     prelude::{Delimiter, Result},
@@ -336,10 +336,15 @@ impl<P: Parent> ImplFor<'_, P> {
         if let Some(generics) = &self.generator.generics() {
             builder.append(generics.type_generics());
         }
-        if let Some(generic_constraints) = self.custom_generic_constraints.take() {
-            builder.append(generic_constraints.where_clause());
-        } else if let Some(generic_constraints) = &self.generator.generic_constraints() {
-            builder.append(generic_constraints.where_clause());
+        match self.custom_generic_constraints.take() {
+            Some(generic_constraints) => {
+                builder.append(generic_constraints.where_clause());
+            }
+            _ => {
+                if let Some(generic_constraints) = &self.generator.generic_constraints() {
+                    builder.append(generic_constraints.where_clause());
+                }
+            }
         }
     }
 }
@@ -362,11 +367,11 @@ fn append_lifetimes_and_generics(
         builder.lifetime_str(lt);
     }
 
-    for (idx, gen) in generics.iter().enumerate() {
+    for (idx, r#gen) in generics.iter().enumerate() {
         if idx > 0 || !lifetimes.is_empty() {
             builder.punct(',');
         }
-        builder.push_parsed(gen).unwrap();
+        builder.push_parsed(r#gen).unwrap();
     }
 
     builder.punct('>');

@@ -77,19 +77,25 @@ impl Attribute {
 fn test_attributes_try_take() {
     use crate::token_stream;
 
-    let stream = &mut token_stream("struct Foo;");
-    assert!(Attribute::try_take(AttributeLocation::Container, stream)
-        .unwrap()
-        .is_empty());
+    let mut ts1 = token_stream("struct Foo;");
+    let stream = &mut ts1;
+    assert!(
+        Attribute::try_take(AttributeLocation::Container, stream)
+            .unwrap()
+            .is_empty()
+    );
     match stream.next().unwrap() {
         TokenTree::Ident(i) => assert_eq!(i, "struct"),
         x => panic!("Expected ident, found {:?}", x),
     }
 
-    let stream = &mut token_stream("#[cfg(test)] struct Foo;");
-    assert!(!Attribute::try_take(AttributeLocation::Container, stream)
-        .unwrap()
-        .is_empty());
+    let mut ts2 = token_stream("#[cfg(test)] struct Foo;");
+    let stream = &mut ts2;
+    assert!(
+        !Attribute::try_take(AttributeLocation::Container, stream)
+            .unwrap()
+            .is_empty()
+    );
     match stream.next().unwrap() {
         TokenTree::Ident(i) => assert_eq!(i, "struct"),
         x => panic!("Expected ident, found {:?}", x),
@@ -126,7 +132,8 @@ pub trait AttributeAccess {
 impl AttributeAccess for Vec<Attribute> {
     fn has_attribute<T: FromAttribute + PartialEq<T>>(&self, attrib: T) -> Result<bool> {
         for attribute in self.iter() {
-            if let Some(attribute) = T::parse(&attribute.tokens)? {
+            let parsed = T::parse(&attribute.tokens)?;
+            if let Some(attribute) = parsed {
                 if attribute == attrib {
                     return Ok(true);
                 }

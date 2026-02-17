@@ -49,7 +49,8 @@ pub fn consume_punct_if(
 ) -> Option<Punct> {
     if let Some(TokenTree::Punct(p)) = input.peek() {
         if p.as_char() == punct {
-            match input.next() {
+            let next_token = input.next();
+            match next_token {
                 Some(TokenTree::Punct(p)) => return Some(p),
                 _ => unreachable!(),
             }

@@ -1,5 +1,5 @@
 use super::attributes::AttributeLocation;
-use super::{utils::*, Attribute, Visibility};
+use super::{Attribute, Visibility, utils::*};
 use crate::prelude::{Delimiter, Ident, Literal, Span, TokenTree};
 use crate::{Error, Result};
 use std::iter::Peekable;
@@ -16,7 +16,7 @@ impl StructBody {
         match input.peek() {
             Some(TokenTree::Group(_)) => {}
             Some(TokenTree::Punct(p)) if p.as_char() == ';' => {
-                return Ok(StructBody { fields: None })
+                return Ok(StructBody { fields: None });
             }
             token => return Error::wrong_token(token, "group or punct"),
         }
@@ -35,7 +35,7 @@ impl StructBody {
                 return Err(Error::InvalidRustSyntax {
                     span: group.span(),
                     expected: format!("brace or parenthesis, found {:?}", found),
-                })
+                });
             }
         };
         Ok(StructBody { fields })
@@ -171,13 +171,14 @@ impl EnumBody {
             Some(TokenTree::Punct(p)) if p.as_char() == ';' => {
                 return Ok(EnumBody {
                     variants: Vec::new(),
-                })
+                });
             }
             token => return Error::wrong_token(token, "group or ;"),
         }
         let group = assume_group(input.next());
         let mut variants = Vec::new();
-        let stream = &mut group.stream().into_iter().peekable();
+        let mut variant_stream = group.stream().into_iter().peekable();
+        let stream = &mut variant_stream;
         while stream.peek().is_some() {
             let attributes = Attribute::try_take(AttributeLocation::Variant, stream)?;
             let ident = match super::utils::consume_ident(stream) {
@@ -190,43 +191,49 @@ impl EnumBody {
 
             if let Some(TokenTree::Group(_)) = stream.peek() {
                 let group = assume_group(stream.next());
-                let stream = &mut group.stream().into_iter().peekable();
+                let mut inner_stream = group.stream().into_iter().peekable();
+                let stream_ref = &mut inner_stream;
                 match group.delimiter() {
                     Delimiter::Brace => {
-                        fields = Some(Fields::Struct(UnnamedField::parse_with_name(stream)?));
+                        fields = Some(Fields::Struct(UnnamedField::parse_with_name(stream_ref)?));
                     }
                     Delimiter::Parenthesis => {
-                        fields = Some(Fields::Tuple(UnnamedField::parse(stream)?));
+                        fields = Some(Fields::Tuple(UnnamedField::parse(stream_ref)?));
                     }
                     delim => {
                         return Err(Error::InvalidRustSyntax {
                             span: group.span(),
                             expected: format!("Brace or parenthesis, found {:?}", delim),
-                        })
+                        });
                     }
                 }
             }
             match stream.peek() {
                 Some(TokenTree::Punct(p)) if p.as_char() == '=' => {
                     assume_punct(stream.next(), '=');
-                    match stream.next() {
+
+                    let first_val_token = stream.next(); // Bind #1
+                    match first_val_token {
                         Some(TokenTree::Literal(lit)) => {
                             value = Some(lit);
                         }
-                        Some(TokenTree::Punct(p)) if p.as_char() == '-' => match stream.next() {
-                            Some(TokenTree::Literal(lit)) => {
-                                match lit.to_string().parse::<i64>() {
-                                    Ok(val) => value = Some(Literal::i64_unsuffixed(-val)),
-                                    Err(_) => {
-                                        return Err(Error::custom_at(
-                                            "parse::<i64> failed",
-                                            lit.span(),
-                                        ))
-                                    }
-                                };
+                        Some(TokenTree::Punct(p)) if p.as_char() == '-' => {
+                            let second_val_token = stream.next(); // Bind #2
+                            match second_val_token {
+                                Some(TokenTree::Literal(lit)) => {
+                                    match lit.to_string().parse::<i64>() {
+                                        Ok(val) => value = Some(Literal::i64_unsuffixed(-val)),
+                                        Err(_) => {
+                                            return Err(Error::custom_at(
+                                                "parse::<i64> failed",
+                                                lit.span(),
+                                            ));
+                                        }
+                                    };
+                                }
+                                token => return Error::wrong_token(token.as_ref(), "literal"),
                             }
-                            token => return Error::wrong_token(token.as_ref(), "literal"),
-                        },
+                        }
                         token => return Error::wrong_token(token.as_ref(), "literal"),
                     }
                 }
@@ -497,7 +504,7 @@ impl UnnamedField {
                     return Err(Error::InvalidRustSyntax {
                         span: x.span(),
                         expected: format!("ident or end of group, got {:?}", x),
-                    })
+                    });
                 }
                 None => break,
             };
