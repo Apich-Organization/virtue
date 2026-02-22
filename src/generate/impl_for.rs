@@ -19,6 +19,7 @@ pub struct ImplFor<'a, P: Parent> {
     custom_generic_constraints: Option<GenericConstraints>,
     impl_types: Vec<StreamBuilder>,
     fns: Vec<(StreamBuilder, StreamBuilder)>,
+    is_unsafe: bool,
 }
 
 impl<'a, P: Parent> ImplFor<'a, P> {
@@ -40,6 +41,7 @@ impl<'a, P: Parent> ImplFor<'a, P> {
             custom_generic_constraints: None,
             impl_types: Vec::new(),
             fns: Vec::new(),
+            is_unsafe: false,
         }
     }
 
@@ -81,6 +83,19 @@ impl<'a, P: Parent> ImplFor<'a, P> {
         self
     }
 
+    /// Add unsafe generic parameters to the trait implementation.
+    /// ```
+    /// Make the generated `impl` block unsafe.
+    ///
+    /// Generates:
+    /// ```ignore
+    /// unsafe impl Foo for Bar { }
+    /// ```
+    pub fn make_unsafe(mut self) -> Self {
+        self.is_unsafe = true;
+        self
+    }
+
     /// Add generic parameters to the trait implementation.
     ///```
     /// # use virtue::prelude::Generator;
@@ -96,7 +111,6 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// impl Foo for <struct or enum> {
     ///     const BAR: u8 = 5;
     /// }
-    /// ```
     pub fn with_trait_generics<ITER>(mut self, generics: ITER) -> Self
     where
         ITER: IntoIterator,
@@ -310,6 +324,9 @@ impl<P: Parent> Drop for ImplFor<'_, P> {
 
 impl<P: Parent> ImplFor<'_, P> {
     fn generate_impl_definition(&mut self, builder: &mut StreamBuilder) {
+        if self.is_unsafe {
+            builder.ident_str("unsafe");
+        }
         builder.ident_str("impl");
 
         let impl_generics = self.impl_generics.as_slice();
