@@ -43,6 +43,7 @@ impl<'a, P: Parent> GenerateMod<'a, P> {
     /// ```
     ///
     /// This is especially useful with `.add_use("super::*");`, which will pull all parent imports into scope
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.

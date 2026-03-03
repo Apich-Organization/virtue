@@ -155,6 +155,7 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// #[serde(untagged)]
     /// enum Foo { }
     /// ```
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
@@ -189,6 +190,7 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// # Panics
     ///
     /// Panics if an internal invariant is violated.
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
@@ -536,6 +538,7 @@ impl EnumValue {
     ///     Bar { }
     /// }
     /// ```
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
@@ -571,6 +574,7 @@ impl EnumValue {
     /// # Panics
     ///
     /// Panics if an internal invariant is violated.
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.

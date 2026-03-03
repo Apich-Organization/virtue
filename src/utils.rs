@@ -44,6 +44,7 @@ use crate::prelude::*;
 ///     x => panic!("Unexpected attribute: {:?}", x)
 /// }
 /// ```
+///
 /// # Errors
 ///
 /// Returns an error if parsing fails.

@@ -45,6 +45,7 @@ impl StreamBuilder {
     }
 
     /// Push a single token to the stream.
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
@@ -59,6 +60,7 @@ impl StreamBuilder {
     /// Attempt to parse the given string as valid Rust code, and append the parsed result to the internal stream.
     ///
     /// Currently panics if the string could not be parsed as valid Rust code.
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.

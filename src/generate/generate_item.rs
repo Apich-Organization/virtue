@@ -66,6 +66,7 @@ impl<'a> GenConst<'a> {
     ///     const BAR: u8 = 5;
     /// }
     /// ```
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.

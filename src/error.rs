@@ -83,6 +83,7 @@ impl Error {
     }
 
     /// Throw a custom error at a given `Option<TokenTree>`
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.

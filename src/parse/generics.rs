@@ -596,6 +596,7 @@ impl GenericConstraints {
     /// // generic_constraints is now:
     /// // `T: Foo, U: Bar`
     /// ```
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
@@ -634,6 +635,7 @@ impl GenericConstraints {
     /// # Panics
     ///
     /// Panics if an internal invariant is violated.
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.

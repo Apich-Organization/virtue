@@ -164,6 +164,7 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     }
 
     /// Add a outer attribute to the trait implementation
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
@@ -181,6 +182,7 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     }
 
     /// Add a inner attribute to the trait implementation
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
@@ -259,6 +261,7 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     ///     type Bar = u8;
     /// }
     /// ```
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
@@ -303,6 +306,7 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// {
     /// }
     /// ```
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.

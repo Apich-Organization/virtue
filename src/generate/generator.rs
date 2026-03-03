@@ -256,6 +256,7 @@ impl Generator {
     }
 
     /// Assert that the generated code in this generator matches the given string. This is useful for testing purposes in combination with the `with_name` function.
+    ///
     /// # Panics
     ///
     /// Panics if an internal invariant is violated.

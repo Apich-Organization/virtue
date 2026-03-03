@@ -51,6 +51,7 @@ impl<'a, P: Parent> Impl<'a, P> {
     }
 
     /// Add a outer attribute to the trait implementation
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
@@ -68,6 +69,7 @@ impl<'a, P: Parent> Impl<'a, P> {
     }
 
     /// Add a inner attribute to the trait implementation
+    ///
     /// # Errors
     ///
     /// Returns an error if parsing fails.
