@@ -70,6 +70,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// Calling this method in any other context has no effect.
     ///
     /// [`impl_for_with_lifetimes`]: struct.Generator.html#method.impl_for_with_lifetimes
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     pub fn new_lifetimes_depend_on_existing(mut self) -> Self {
         if let Some(new_lt) = &self.lifetimes
             && let Some(generics) = self.generator.generics()
@@ -129,6 +133,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
         self.trait_generics = Some(generics.into_iter().map(Into::into).collect());
         self
     }
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
 
     /// Add generic parameters to the impl block.
     /// ```
@@ -156,6 +164,9 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     }
 
     /// Add a outer attribute to the trait implementation
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn impl_outer_attr(
         &mut self,
         attr: impl AsRef<str>,
@@ -170,6 +181,9 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     }
 
     /// Add a inner attribute to the trait implementation
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn impl_inner_attr(
         &mut self,
         attr: impl AsRef<str>,
@@ -213,6 +227,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     ) -> GenConst<'_> {
         GenConst::new(&mut self.consts, name, ty)
     }
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
 
     /// Add a function to the trait implementation.
     ///
@@ -241,6 +259,9 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     ///     type Bar = u8;
     /// }
     /// ```
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn impl_type(
         &mut self,
         name: impl AsRef<str>,
@@ -282,6 +303,9 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// {
     /// }
     /// ```
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn modify_generic_constraints<CB>(
         &mut self,
         cb: CB,

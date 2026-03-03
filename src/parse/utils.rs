@@ -5,6 +5,11 @@ use crate::prelude::Ident;
 use crate::prelude::Punct;
 use crate::prelude::TokenTree;
 use std::iter::Peekable;
+/// Documentation for `assume_group`.
+///
+/// # Panics
+///
+/// Panics if internal invariants are violated.
 
 pub fn assume_group(t: Option<TokenTree>) -> Group {
     match t {
@@ -12,12 +17,22 @@ pub fn assume_group(t: Option<TokenTree>) -> Group {
         | _ => unreachable!(),
     }
 }
+/// Documentation for `assume_ident`.
+///
+/// # Panics
+///
+/// Panics if internal invariants are violated.
 pub fn assume_ident(t: Option<TokenTree>) -> Ident {
     match t {
         | Some(TokenTree::Ident(ident)) => ident,
         | _ => unreachable!(),
     }
 }
+/// Documentation for `assume_punct`.
+///
+/// # Panics
+///
+/// Panics if internal invariants are violated.
 pub fn assume_punct(
     t: Option<TokenTree>,
     punct: char,
@@ -49,6 +64,11 @@ pub fn consume_ident(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> O
         | _ => None,
     }
 }
+/// Documentation for `consume_punct_if`.
+///
+/// # Panics
+///
+/// Panics if internal invariants are violated.
 
 pub fn consume_punct_if(
     input: &mut Peekable<impl Iterator<Item = TokenTree>>,
@@ -104,6 +124,13 @@ const BRACKET_DELIMITER: &[Option<Delimiter>] = &[
     Some(Delimiter::Brace),
 ];
 
+/// Documentation for `read_tokens_until_punct`.
+///
+/// # Errors
+///
+/// Returns an error if parsing fails.
+#[allow(clippy::useless_let_if_seq)]
+#[allow(clippy::manual_let_else)]
 pub fn read_tokens_until_punct(
     input: &mut Peekable<impl Iterator<Item = TokenTree>>,
     expected_puncts: &[char],

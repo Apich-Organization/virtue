@@ -219,6 +219,10 @@ impl Generator {
         }
         false
     }
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
 
     /// Consume the contents of this generator. This *must* be called, or else the generator will panic on drop.
     pub fn finish(mut self) -> crate::prelude::Result<TokenStream> {
@@ -252,6 +256,9 @@ impl Generator {
     }
 
     /// Assert that the generated code in this generator matches the given string. This is useful for testing purposes in combination with the `with_name` function.
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     pub fn assert_eq(
         &self,
         expected: &str,

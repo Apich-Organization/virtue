@@ -155,6 +155,9 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// #[serde(untagged)]
     /// enum Foo { }
     /// ```
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn with_attribute(
         &mut self,
         name: impl AsRef<str>,
@@ -182,6 +185,13 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// #[serde(untagged)]
     /// enum Foo { }
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn with_parsed_attribute(
         &mut self,
         attribute: impl AsRef<str>,
@@ -312,6 +322,10 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     ///     Bar(&'a str)
     /// }
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     pub fn with_generic(
         &mut self,
         generic: Generic,
@@ -325,6 +339,10 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// Add an enum value
     ///
     /// Returns a builder for the value that's similar to `GenStruct`
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     pub fn add_value(
         &mut self,
         name: impl Into<String>,
@@ -518,6 +536,9 @@ impl EnumValue {
     ///     Bar { }
     /// }
     /// ```
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn with_attribute(
         &mut self,
         name: impl AsRef<str>,
@@ -546,6 +567,13 @@ impl EnumValue {
     ///     Bar { }
     /// }
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn with_parsed_attribute(
         &mut self,
         attribute: impl AsRef<str>,
@@ -582,6 +610,10 @@ impl EnumValue {
     ) -> &mut Self {
         AttributeContainer::with_attribute_stream(self, attribute)
     }
+    ///
+    /// # Panics
+    ///
+    /// Panics if internal invariants are violated.
 
     /// Add a field to the enum value.
     ///

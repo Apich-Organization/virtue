@@ -279,6 +279,9 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// #[serde(rename_all = "camelCase")]
     /// struct Foo { }
     /// ```
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn with_attribute(
         &mut self,
         name: impl AsRef<str>,
@@ -305,6 +308,13 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// #[serde(rename_all = "camelCase")]
     /// struct Foo { }
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn with_parsed_attribute(
         &mut self,
         attribute: impl AsRef<str>,

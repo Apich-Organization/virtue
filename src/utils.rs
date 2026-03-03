@@ -44,6 +44,9 @@ use crate::prelude::*;
 ///     x => panic!("Unexpected attribute: {:?}", x)
 /// }
 /// ```
+/// # Errors
+///
+/// Returns an error if parsing fails.
 pub fn parse_tagged_attribute(
     group: &Group,
     prefix: &str,

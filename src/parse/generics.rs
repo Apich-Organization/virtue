@@ -415,6 +415,7 @@ pub struct Lifetime {
 }
 
 impl Lifetime {
+    #[allow(clippy::useless_let_if_seq)]
     pub(crate) fn take(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Result<Self> {
         let start = assume_punct(input.next(), '\'');
         let ident = match input.peek() {
@@ -501,6 +502,10 @@ impl SimpleGeneric {
     }
 
     /// The name of this generic, e.g. `T`
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     #[must_use]
     pub fn name(&self) -> Ident {
         self.ident.clone()
@@ -519,6 +524,7 @@ pub struct ConstGeneric {
 }
 
 impl ConstGeneric {
+    #[allow(clippy::useless_let_if_seq)]
     pub(crate) fn take(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Result<Self> {
         let const_token = assume_ident(input.next());
         let ident = assume_ident(input.next());
@@ -590,6 +596,9 @@ impl GenericConstraints {
     /// // generic_constraints is now:
     /// // `T: Foo, U: Bar`
     /// ```
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn push_constraint(
         &mut self,
         generic: &SimpleGeneric,
@@ -621,6 +630,13 @@ impl GenericConstraints {
     /// // generic_constraints is now:
     /// // `T: Foo, u32: SomeTrait`
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn push_parsed_constraint(
         &mut self,
         constraint: impl AsRef<str>,
@@ -636,6 +652,10 @@ impl GenericConstraints {
     }
 
     /// Clear the constraints
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     pub fn clear(&mut self) {
         self.constraints.clear();
     }

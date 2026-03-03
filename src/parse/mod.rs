@@ -80,6 +80,10 @@ pub enum Parse {
 
 impl Parse {
     /// Parse the given [`TokenStream`] and return the result.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     pub fn new(input: TokenStream) -> Result<Self> {
         let source = &mut input.into_iter().peekable();
 

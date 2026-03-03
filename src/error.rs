@@ -71,6 +71,7 @@ impl Error {
     }
 
     /// Throw a custom error at a given token
+    #[allow(clippy::needless_pass_by_value)]
     pub fn custom_at_token(
         s: impl Into<String>,
         token: TokenTree,
@@ -82,6 +83,9 @@ impl Error {
     }
 
     /// Throw a custom error at a given `Option<TokenTree>`
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn custom_at_opt_token(
         s: impl Into<String>,
         token: Option<TokenTree>,
@@ -104,6 +108,7 @@ impl Error {
 
     /// Return a new error that is located at the given span
     #[must_use]
+    #[allow(clippy::match_same_arms)]
     pub const fn with_span(
         mut self,
         new_span: Span,
@@ -125,10 +130,18 @@ impl Error {
 // helper functions for the unit tests
 #[cfg(test)]
 impl Error {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     /// helper functions for the unit tests
     pub fn is_unknown_data_type(&self) -> bool {
         matches!(self, Error::UnknownDataType(_))
     }
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
 
     /// helper functions for the unit tests
     pub fn is_invalid_rust_syntax(&self) -> bool {
@@ -162,6 +175,10 @@ impl fmt::Display for Error {
 
 impl Error {
     /// Turn this error into a [`TokenStream`] so it shows up as a [`compile_error`] for the user.
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     pub fn into_token_stream(self) -> TokenStream {
         let maybe_span = match &self {
             | Self::UnknownDataType(span)
@@ -173,6 +190,10 @@ impl Error {
     }
 
     /// Turn this error into a [`TokenStream`] so it shows up as a [`compile_error`] for the user. The error will be shown at the given `span`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn throw_with_span(
         self,

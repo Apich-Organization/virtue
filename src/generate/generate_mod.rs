@@ -43,6 +43,9 @@ impl<'a, P: Parent> GenerateMod<'a, P> {
     /// ```
     ///
     /// This is especially useful with `.add_use("super::*");`, which will pull all parent imports into scope
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn add_use(
         &mut self,
         r#use: impl AsRef<str>,
@@ -82,6 +85,10 @@ impl<'a, P: Parent> GenerateMod<'a, P> {
     /// Alias for [`impl`] which doesn't need a `r#` prefix.
     ///
     /// [`impl`]: #method.impl
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     pub fn generate_impl(
         &mut self,
         name: impl Into<String>,

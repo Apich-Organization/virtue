@@ -118,6 +118,10 @@ fn test_attributes_try_take() {
 /// [`utils::parse_tagged_attribute`]: ../utils/fn.parse_tagged_attribute.html
 pub trait FromAttribute: Sized {
     /// Try to parse the given group into your own type. Return `Ok(None)` if the parsing failed or if the attribute was not this type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     fn parse(group: &Group) -> Result<Option<Self>>;
 }
 
@@ -126,6 +130,10 @@ pub trait AttributeAccess {
     /// Check to see if has the given attribute. See [`FromAttribute`] for more information.
     ///
     /// **note**: Will immediately return `Err(_)` on the first error `T` returns.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     fn has_attribute<T: FromAttribute + PartialEq<T>>(
         &self,
         attrib: T,
@@ -134,6 +142,10 @@ pub trait AttributeAccess {
     /// Returns the first attribute that returns `Some(Self)`. See [`FromAttribute`] for more information.
     ///
     /// **note**: Will immediately return `Err(_)` on the first error `T` returns.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     fn get_attribute<T: FromAttribute>(&self) -> Result<Option<T>>;
 }
 

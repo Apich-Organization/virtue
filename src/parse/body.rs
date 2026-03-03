@@ -572,6 +572,10 @@ impl UnnamedField {
     /// Return [`type`] as a string. Useful for comparing it for known values.
     ///
     /// [`type`]: #structfield.type
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn type_string(&self) -> String {
         self.r#type
@@ -585,6 +589,10 @@ impl UnnamedField {
     /// **note**: Until <https://github.com/rust-lang/rust/issues/54725> is stable, this will return the first span of the type instead
     ///
     /// [`type`]: #structfield.type
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn span(&self) -> Span {
         // BlockedTODO: https://github.com/rust-lang/rust/issues/54725
@@ -637,6 +645,10 @@ pub enum IdentOrIndex {
 
 impl IdentOrIndex {
     /// Get the ident. Will panic if this is an `IdentOrIndex::Index`
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn unwrap_ident(&self) -> Ident {
         match self {
@@ -675,6 +687,11 @@ impl IdentOrIndex {
     }
 
     /// Returns the attributes of this field.
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
+    #[allow(clippy::match_same_arms)]
     #[must_use]
     pub const fn attributes(&self) -> &Vec<Attribute> {
         match self {

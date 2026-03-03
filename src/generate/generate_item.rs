@@ -66,6 +66,9 @@ impl<'a> GenConst<'a> {
     ///     const BAR: u8 = 5;
     /// }
     /// ```
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn with_value<F>(
         self,
         f: F,
@@ -138,6 +141,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     }
 
     /// Add an outer attribute
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn with_attr(
         mut self,
@@ -148,6 +155,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     }
 
     /// Add `#[inline(always)]` to the function
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn with_inline_always(mut self) -> Self {
         self.attrs.push("inline(always)".to_string());
@@ -167,6 +178,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo < 'a > () { } }");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn with_lifetime(
         mut self,
@@ -189,6 +204,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { async fn foo () { } }");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub const fn as_async(mut self) -> Self {
         self.is_async = true;
@@ -211,6 +230,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo < 'a , 'b : 'a > () { } }");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn with_lifetime_deps<ITER, I>(
         mut self,
@@ -241,6 +264,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo < D > () { } }");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn with_generic(
         mut self,
@@ -266,6 +293,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo < D , E : Encodable > () { } }");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn with_generic_deps<DEP, I>(
         mut self,
@@ -296,6 +327,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo (& self ,) { } }");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub const fn with_self_arg(
         mut self,
@@ -319,6 +354,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo (a : u32 , b : u32) { } }");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn with_arg(
         mut self,
@@ -342,6 +381,10 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo () ->u32 { } }");
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub fn with_return_type(
         mut self,
@@ -352,11 +395,19 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     }
 
     /// Make the function `pub`. If this is not called, the function will have no visibility modifier.
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     #[must_use]
     pub const fn make_pub(mut self) -> Self {
         self.vis = Visibility::Pub;
         self
     }
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
 
     /// Complete the function definition. This function takes a callback that will form the body of the function.
     ///

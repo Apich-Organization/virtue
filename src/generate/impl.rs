@@ -51,6 +51,9 @@ impl<'a, P: Parent> Impl<'a, P> {
     }
 
     /// Add a outer attribute to the trait implementation
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn impl_outer_attr(
         &mut self,
         attr: impl AsRef<str>,
@@ -65,6 +68,9 @@ impl<'a, P: Parent> Impl<'a, P> {
     }
 
     /// Add a inner attribute to the trait implementation
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn impl_inner_attr(
         &mut self,
         attr: impl AsRef<str>,

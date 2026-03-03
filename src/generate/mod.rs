@@ -181,6 +181,10 @@ pub struct FieldBuilder<'a, P> {
 }
 
 impl<P> FieldBuilder<'_, P> {
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
     /// Add an attribute to the field.
     ///
     /// ```
@@ -229,6 +233,10 @@ impl<P> FieldBuilder<'_, P> {
         self.current().with_attribute(name, value)?;
         Ok(self)
     }
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
 
     /// Add a parsed attribute to the field.
     ///
@@ -264,6 +272,10 @@ impl<P> FieldBuilder<'_, P> {
     ///     }
     /// }
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     pub fn with_parsed_attribute(
         &mut self,
         attribute: impl AsRef<str>,
@@ -335,6 +347,10 @@ impl<P> FieldBuilder<'_, P> {
 // Only allow `pub` on struct fields
 impl<P: Parent> FieldBuilder<'_, GenStruct<'_, P>> {
     /// Make the field public.
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
     pub fn make_pub(&mut self) -> &mut Self {
         self.current().vis = Visibility::Pub;
         self

@@ -17,6 +17,12 @@ pub enum Visibility {
 }
 
 impl Visibility {
+    /// Try to take visibility from the input
+    ///
+    /// # Panics
+    ///
+    /// Panics if an internal invariant is violated.
+    #[allow(clippy::unnecessary_wraps)]
     pub(crate) fn try_take(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Result<Self> {
         match input.peek() {
             | Some(TokenTree::Ident(ident)) if ident_eq(ident, "pub") => {

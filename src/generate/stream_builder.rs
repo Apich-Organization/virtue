@@ -45,6 +45,9 @@ impl StreamBuilder {
     }
 
     /// Push a single token to the stream.
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn push(
         &mut self,
         item: impl Into<TokenTree>,
@@ -56,6 +59,9 @@ impl StreamBuilder {
     /// Attempt to parse the given string as valid Rust code, and append the parsed result to the internal stream.
     ///
     /// Currently panics if the string could not be parsed as valid Rust code.
+    /// # Errors
+    ///
+    /// Returns an error if parsing fails.
     pub fn push_parsed(
         &mut self,
         item: impl AsRef<str>,
@@ -78,6 +84,10 @@ impl StreamBuilder {
         self.stream.extend([TokenTree::Ident(ident)]);
         self
     }
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
 
     /// Push a single ident to the stream. An ident is any word that a code file may contain, e.g. `fn`, `struct`, `where`, names of functions and structs, etc.
     pub fn ident_str(
@@ -90,6 +100,10 @@ impl StreamBuilder {
         ))]);
         self
     }
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the operation fails.
 
     /// Add a group. A group is any block surrounded by `{ .. }`, `[ .. ]` or `( .. )`.
     ///
