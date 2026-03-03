@@ -1,7 +1,18 @@
+use super::Attribute;
+use super::Visibility;
 use super::attributes::AttributeLocation;
-use super::{Attribute, Visibility, utils::*};
-use crate::prelude::{Delimiter, Ident, Literal, Span, TokenTree};
-use crate::{Error, Result};
+use super::utils::assume_group;
+use super::utils::assume_ident;
+use super::utils::assume_punct;
+use super::utils::consume_punct_if;
+use super::utils::read_tokens_until_punct;
+use crate::Error;
+use crate::Result;
+use crate::prelude::Delimiter;
+use crate::prelude::Ident;
+use crate::prelude::Literal;
+use crate::prelude::Span;
+use crate::prelude::TokenTree;
 use std::iter::Peekable;
 
 /// The body of a struct
@@ -14,31 +25,31 @@ pub struct StructBody {
 impl StructBody {
     pub(crate) fn take(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Result<Self> {
         match input.peek() {
-            Some(TokenTree::Group(_)) => {}
-            Some(TokenTree::Punct(p)) if p.as_char() == ';' => {
-                return Ok(StructBody { fields: None });
-            }
-            token => return Error::wrong_token(token, "group or punct"),
+            | Some(TokenTree::Group(_)) => {},
+            | Some(TokenTree::Punct(p)) if p.as_char() == ';' => {
+                return Ok(Self { fields: None });
+            },
+            | token => return Error::wrong_token(token, "group or punct"),
         }
         let group = assume_group(input.next());
         let mut stream = group.stream().into_iter().peekable();
         let fields = match group.delimiter() {
-            Delimiter::Brace => {
+            | Delimiter::Brace => {
                 let fields = UnnamedField::parse_with_name(&mut stream)?;
                 Some(Fields::Struct(fields))
-            }
-            Delimiter::Parenthesis => {
+            },
+            | Delimiter::Parenthesis => {
                 let fields = UnnamedField::parse(&mut stream)?;
                 Some(Fields::Tuple(fields))
-            }
-            found => {
+            },
+            | found => {
                 return Err(Error::InvalidRustSyntax {
                     span: group.span(),
-                    expected: format!("brace or parenthesis, found {:?}", found),
+                    expected: format!("brace or parenthesis, found {found:?}"),
                 });
-            }
+            },
         };
-        Ok(StructBody { fields })
+        Ok(Self { fields })
     }
 }
 
@@ -167,13 +178,11 @@ pub struct EnumBody {
 impl EnumBody {
     pub(crate) fn take(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Result<Self> {
         match input.peek() {
-            Some(TokenTree::Group(_)) => {}
-            Some(TokenTree::Punct(p)) if p.as_char() == ';' => {
-                return Ok(EnumBody {
-                    variants: Vec::new(),
-                });
-            }
-            token => return Error::wrong_token(token, "group or ;"),
+            | Some(TokenTree::Group(_)) => {},
+            | Some(TokenTree::Punct(p)) if p.as_char() == ';' => {
+                return Ok(Self { variants: Vec::new() });
+            },
+            | token => return Error::wrong_token(token, "group or ;"),
         }
         let group = assume_group(input.next());
         let mut variants = Vec::new();
@@ -182,8 +191,8 @@ impl EnumBody {
         while stream.peek().is_some() {
             let attributes = Attribute::try_take(AttributeLocation::Variant, stream)?;
             let ident = match super::utils::consume_ident(stream) {
-                Some(ident) => ident,
-                None => Error::wrong_token(stream.peek(), "ident")?,
+                | Some(ident) => ident,
+                | None => Error::wrong_token(stream.peek(), "ident")?,
             };
 
             let mut fields = None;
@@ -194,56 +203,56 @@ impl EnumBody {
                 let mut inner_stream = group.stream().into_iter().peekable();
                 let stream_ref = &mut inner_stream;
                 match group.delimiter() {
-                    Delimiter::Brace => {
+                    | Delimiter::Brace => {
                         fields = Some(Fields::Struct(UnnamedField::parse_with_name(stream_ref)?));
-                    }
-                    Delimiter::Parenthesis => {
+                    },
+                    | Delimiter::Parenthesis => {
                         fields = Some(Fields::Tuple(UnnamedField::parse(stream_ref)?));
-                    }
-                    delim => {
+                    },
+                    | delim => {
                         return Err(Error::InvalidRustSyntax {
                             span: group.span(),
-                            expected: format!("Brace or parenthesis, found {:?}", delim),
+                            expected: format!("Brace or parenthesis, found {delim:?}"),
                         });
-                    }
+                    },
                 }
             }
             match stream.peek() {
-                Some(TokenTree::Punct(p)) if p.as_char() == '=' => {
+                | Some(TokenTree::Punct(p)) if p.as_char() == '=' => {
                     assume_punct(stream.next(), '=');
 
                     let first_val_token = stream.next(); // Bind #1
                     match first_val_token {
-                        Some(TokenTree::Literal(lit)) => {
+                        | Some(TokenTree::Literal(lit)) => {
                             value = Some(lit);
-                        }
-                        Some(TokenTree::Punct(p)) if p.as_char() == '-' => {
+                        },
+                        | Some(TokenTree::Punct(p)) if p.as_char() == '-' => {
                             let second_val_token = stream.next(); // Bind #2
                             match second_val_token {
-                                Some(TokenTree::Literal(lit)) => {
+                                | Some(TokenTree::Literal(lit)) => {
                                     match lit.to_string().parse::<i64>() {
-                                        Ok(val) => value = Some(Literal::i64_unsuffixed(-val)),
-                                        Err(_) => {
+                                        | Ok(val) => value = Some(Literal::i64_unsuffixed(-val)),
+                                        | Err(_) => {
                                             return Err(Error::custom_at(
                                                 "parse::<i64> failed",
                                                 lit.span(),
                                             ));
-                                        }
-                                    };
-                                }
-                                token => return Error::wrong_token(token.as_ref(), "literal"),
+                                        },
+                                    }
+                                },
+                                | token => return Error::wrong_token(token.as_ref(), "literal"),
                             }
-                        }
-                        token => return Error::wrong_token(token.as_ref(), "literal"),
+                        },
+                        | token => return Error::wrong_token(token.as_ref(), "literal"),
                     }
-                }
-                Some(TokenTree::Punct(p)) if p.as_char() == ',' => {
+                },
+                | Some(TokenTree::Punct(p)) if p.as_char() == ',' => {
                     // next field
-                }
-                None => {
+                },
+                | None => {
                     // group done
-                }
-                token => return Error::wrong_token(token, "group, comma or ="),
+                },
+                | token => return Error::wrong_token(token, "group, comma or ="),
             }
 
             consume_punct_if(stream, ',');
@@ -256,7 +265,7 @@ impl EnumBody {
             });
         }
 
-        Ok(EnumBody { variants })
+        Ok(Self { variants })
     }
 }
 
@@ -423,24 +432,33 @@ impl Fields {
     ///     C(u32, u32), // will return `vec[Index { index: 0 }, Index { index: 1 }]`
     ///     D { a: u32, b: u32 }, // will return `vec[Ident { ident: "a" }, Ident { ident: "b" }]`
     /// }
+    #[must_use]
     pub fn names(&self) -> Vec<IdentOrIndex> {
         let result: Vec<IdentOrIndex> = match self {
-            Self::Tuple(fields) => fields
-                .iter()
-                .enumerate()
-                .map(|(index, field)| IdentOrIndex::Index {
-                    index,
-                    span: field.span(),
-                    attributes: field.attributes.clone(),
-                })
-                .collect(),
-            Self::Struct(fields) => fields
-                .iter()
-                .map(|(ident, field)| IdentOrIndex::Ident {
-                    ident: ident.clone(),
-                    attributes: field.attributes.clone(),
-                })
-                .collect(),
+            | Self::Tuple(fields) => {
+                fields
+                    .iter()
+                    .enumerate()
+                    .map(|(index, field)| {
+                        IdentOrIndex::Index {
+                            index,
+                            span: field.span(),
+                            attributes: field.attributes.clone(),
+                        }
+                    })
+                    .collect()
+            },
+            | Self::Struct(fields) => {
+                fields
+                    .iter()
+                    .map(|(ident, field)| {
+                        IdentOrIndex::Ident {
+                            ident: ident.clone(),
+                            attributes: field.attributes.clone(),
+                        }
+                    })
+                    .collect()
+            },
         };
         result
     }
@@ -449,14 +467,15 @@ impl Fields {
     ///
     /// ```
     /// enum Foo {
-    ///     C(u32, u32), // will return `Delimiter::Paranthesis`
+    ///     C(u32, u32),          // will return `Delimiter::Paranthesis`
     ///     D { a: u32, b: u32 }, // will return `Delimiter::Brace`
     /// }
     /// ```
-    pub fn delimiter(&self) -> Delimiter {
+    #[must_use]
+    pub const fn delimiter(&self) -> Delimiter {
         match self {
-            Self::Tuple(_) => Delimiter::Parenthesis,
-            Self::Struct(_) => Delimiter::Brace,
+            | Self::Tuple(_) => Delimiter::Parenthesis,
+            | Self::Struct(_) => Delimiter::Brace,
         }
     }
 }
@@ -465,15 +484,18 @@ impl Fields {
 impl Fields {
     fn len(&self) -> usize {
         match self {
-            Self::Tuple(fields) => fields.len(),
-            Self::Struct(fields) => fields.len(),
+            | Self::Tuple(fields) => fields.len(),
+            | Self::Struct(fields) => fields.len(),
         }
     }
 
-    fn get(&self, index: usize) -> Option<(Option<&Ident>, &UnnamedField)> {
+    fn get(
+        &self,
+        index: usize,
+    ) -> Option<(Option<&Ident>, &UnnamedField)> {
         match self {
-            Self::Tuple(fields) => fields.get(index).map(|f| (None, f)),
-            Self::Struct(fields) => fields.get(index).map(|(ident, field)| (Some(ident), field)),
+            | Self::Tuple(fields) => fields.get(index).map(|f| (None, f)),
+            | Self::Struct(fields) => fields.get(index).map(|(ident, field)| (Some(ident), field)),
         }
     }
 }
@@ -491,7 +513,7 @@ pub struct UnnamedField {
 
 impl UnnamedField {
     pub(crate) fn parse_with_name(
-        input: &mut Peekable<impl Iterator<Item = TokenTree>>,
+        input: &mut Peekable<impl Iterator<Item = TokenTree>>
     ) -> Result<Vec<(Ident, Self)>> {
         let mut result = Vec::new();
         loop {
@@ -499,20 +521,20 @@ impl UnnamedField {
             let vis = Visibility::try_take(input)?;
 
             let ident = match input.peek() {
-                Some(TokenTree::Ident(_)) => assume_ident(input.next()),
-                Some(x) => {
+                | Some(TokenTree::Ident(_)) => assume_ident(input.next()),
+                | Some(x) => {
                     return Err(Error::InvalidRustSyntax {
                         span: x.span(),
-                        expected: format!("ident or end of group, got {:?}", x),
+                        expected: format!("ident or end of group, got {x:?}"),
                     });
-                }
-                None => break,
+                },
+                | None => break,
             };
             match input.peek() {
-                Some(TokenTree::Punct(p)) if p.as_char() == ':' => {
+                | Some(TokenTree::Punct(p)) if p.as_char() == ':' => {
                     input.next();
-                }
-                token => return Error::wrong_token(token, ":"),
+                },
+                | token => return Error::wrong_token(token, ":"),
             }
             let r#type = read_tokens_until_punct(input, &[','])?;
             consume_punct_if(input, ',');
@@ -529,7 +551,7 @@ impl UnnamedField {
     }
 
     pub(crate) fn parse(
-        input: &mut Peekable<impl Iterator<Item = TokenTree>>,
+        input: &mut Peekable<impl Iterator<Item = TokenTree>>
     ) -> Result<Vec<Self>> {
         let mut result = Vec::new();
         while input.peek().is_some() {
@@ -550,8 +572,12 @@ impl UnnamedField {
     /// Return [`type`] as a string. Useful for comparing it for known values.
     ///
     /// [`type`]: #structfield.type
+    #[must_use]
     pub fn type_string(&self) -> String {
-        self.r#type.iter().map(|t| t.to_string()).collect()
+        self.r#type
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect()
     }
 
     /// Return the span of [`type`].
@@ -559,6 +585,7 @@ impl UnnamedField {
     /// **note**: Until <https://github.com/rust-lang/rust/issues/54725> is stable, this will return the first span of the type instead
     ///
     /// [`type`]: #structfield.type
+    #[must_use]
     pub fn span(&self) -> Span {
         // BlockedTODO: https://github.com/rust-lang/rust/issues/54725
         // Span::join is unstable
@@ -573,8 +600,8 @@ impl UnnamedField {
         // }
 
         match self.r#type.first() {
-            Some(first) => first.span(),
-            None => Span::call_site(),
+            | Some(first) => first.span(),
+            | None => Span::call_site(),
         }
     }
 }
@@ -610,48 +637,61 @@ pub enum IdentOrIndex {
 
 impl IdentOrIndex {
     /// Get the ident. Will panic if this is an `IdentOrIndex::Index`
+    #[must_use]
     pub fn unwrap_ident(&self) -> Ident {
         match self {
-            Self::Ident { ident, .. } => ident.clone(),
-            x => panic!("Expected ident, found {:?}", x),
+            | Self::Ident { ident, .. } => ident.clone(),
+            | x => panic!("Expected ident, found {x:?}"),
         }
     }
 
-    /// Convert this ident into a TokenTree. If this is an `Index`, will return `prefix + index` instead.
-    pub fn to_token_tree_with_prefix(&self, prefix: &str) -> TokenTree {
+    /// Convert this ident into a `TokenTree`. If this is an `Index`, will return `prefix + index` instead.
+    #[must_use]
+    pub fn to_token_tree_with_prefix(
+        &self,
+        prefix: &str,
+    ) -> TokenTree {
         TokenTree::Ident(match self {
-            IdentOrIndex::Ident { ident, .. } => (*ident).clone(),
-            IdentOrIndex::Index { index, span, .. } => {
-                let name = format!("{}{}", prefix, index);
+            | Self::Ident { ident, .. } => (*ident).clone(),
+            | Self::Index { index, span, .. } => {
+                let name = format!("{prefix}{index}");
                 Ident::new(&name, *span)
-            }
+            },
         })
     }
 
     /// Return either the index or the ident of this field with a fixed prefix. The prefix will always be added.
-    pub fn to_string_with_prefix(&self, prefix: &str) -> String {
+    #[must_use]
+    pub fn to_string_with_prefix(
+        &self,
+        prefix: &str,
+    ) -> String {
         match self {
-            IdentOrIndex::Ident { ident, .. } => ident.to_string(),
-            IdentOrIndex::Index { index, .. } => {
-                format!("{}{}", prefix, index)
-            }
+            | Self::Ident { ident, .. } => ident.to_string(),
+            | Self::Index { index, .. } => {
+                format!("{prefix}{index}")
+            },
         }
     }
 
     /// Returns the attributes of this field.
-    pub fn attributes(&self) -> &Vec<Attribute> {
+    #[must_use]
+    pub const fn attributes(&self) -> &Vec<Attribute> {
         match self {
-            Self::Ident { attributes, .. } => attributes,
-            Self::Index { attributes, .. } => attributes,
+            | Self::Ident { attributes, .. } => attributes,
+            | Self::Index { attributes, .. } => attributes,
         }
     }
 }
 
 impl std::fmt::Display for IdentOrIndex {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        fmt: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         match self {
-            IdentOrIndex::Ident { ident, .. } => write!(fmt, "{}", ident),
-            IdentOrIndex::Index { index, .. } => write!(fmt, "{}", index),
+            | Self::Ident { ident, .. } => write!(fmt, "{ident}"),
+            | Self::Index { index, .. } => write!(fmt, "{index}"),
         }
     }
 }

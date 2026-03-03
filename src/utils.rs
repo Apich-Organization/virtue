@@ -1,5 +1,6 @@
 //! Utility functions
-use crate::{Error, prelude::*};
+use crate::Error;
+use crate::prelude::*;
 
 /// Parse a tagged attribute. This is very helpful for implementing [`FromAttribute`].
 ///
@@ -42,55 +43,53 @@ use crate::{Error, prelude::*};
 ///     },
 ///     x => panic!("Unexpected attribute: {:?}", x)
 /// }
-///
 /// ```
-pub fn parse_tagged_attribute(group: &Group, prefix: &str) -> Result<Option<Vec<ParsedAttribute>>> {
+pub fn parse_tagged_attribute(
+    group: &Group,
+    prefix: &str,
+) -> Result<Option<Vec<ParsedAttribute>>> {
     let stream = &mut group.stream().into_iter();
     if let Some(TokenTree::Ident(attribute_ident)) = stream.next() {
         #[allow(clippy::cmp_owned)] // clippy is wrong
-        if attribute_ident.to_string() == prefix {
-            if let Some(TokenTree::Group(group)) = stream.next() {
-                let mut result = Vec::new();
-                let mut stream = group.stream().into_iter().peekable();
-                while let Some(token) = stream.next() {
-                    match (token, stream.peek()) {
-                        (TokenTree::Ident(key), Some(TokenTree::Punct(p)))
-                            if p.as_char() == ',' =>
-                        {
-                            result.push(ParsedAttribute::Tag(key));
-                            stream.next();
-                        }
-                        (TokenTree::Ident(key), None) => {
-                            result.push(ParsedAttribute::Tag(key));
-                            stream.next();
-                        }
-                        (TokenTree::Ident(key), Some(TokenTree::Punct(p)))
-                            if p.as_char() == '=' =>
-                        {
-                            stream.next();
-                            if let Some(TokenTree::Literal(lit)) = stream.next() {
-                                result.push(ParsedAttribute::Property(key, lit));
+        if attribute_ident.to_string() == prefix
+            && let Some(TokenTree::Group(group)) = stream.next()
+        {
+            let mut result = Vec::new();
+            let mut stream = group.stream().into_iter().peekable();
+            while let Some(token) = stream.next() {
+                match (token, stream.peek()) {
+                    | (TokenTree::Ident(key), Some(TokenTree::Punct(p))) if p.as_char() == ',' => {
+                        result.push(ParsedAttribute::Tag(key));
+                        stream.next();
+                    },
+                    | (TokenTree::Ident(key), None) => {
+                        result.push(ParsedAttribute::Tag(key));
+                        stream.next();
+                    },
+                    | (TokenTree::Ident(key), Some(TokenTree::Punct(p))) if p.as_char() == '=' => {
+                        stream.next();
+                        if let Some(TokenTree::Literal(lit)) = stream.next() {
+                            result.push(ParsedAttribute::Property(key, lit));
 
-                                match stream.next() {
-                                    Some(TokenTree::Punct(p)) if p.as_char() == ',' => {}
-                                    None => {}
-                                    x => {
-                                        return Err(Error::custom_at_opt_token("Expected `,`", x));
-                                    }
-                                }
+                            match stream.next() {
+                                | Some(TokenTree::Punct(p)) if p.as_char() == ',' => {},
+                                | None => {},
+                                | x => {
+                                    return Err(Error::custom_at_opt_token("Expected `,`", x));
+                                },
                             }
                         }
-                        (x, _) => {
-                            return Err(Error::custom_at(
-                                "Expected `key` or `key = \"val\"`",
-                                x.span(),
-                            ));
-                        }
-                    }
+                    },
+                    | (x, _) => {
+                        return Err(Error::custom_at(
+                            "Expected `key` or `key = \"val\"`",
+                            x.span(),
+                        ));
+                    },
                 }
-
-                return Ok(Some(result));
             }
+
+            return Ok(Some(result));
         }
     }
     Ok(None)
@@ -109,8 +108,8 @@ pub enum ParsedAttribute {
 #[test]
 fn test_parse_tagged_attribute() {
     let group: Group = match crate::token_stream("[prefix(result, foo = \"bar\", baz)]").next() {
-        Some(TokenTree::Group(group)) => group,
-        x => panic!("Unexpected token {:?}", x),
+        | Some(TokenTree::Group(group)) => group,
+        | x => panic!("Unexpected token {:?}", x),
     };
 
     let attributes = parse_tagged_attribute(&group, "prefix").unwrap().unwrap();
@@ -118,22 +117,22 @@ fn test_parse_tagged_attribute() {
 
     // The stream will contain the contents of the `prefix(...)`
     match iter.next() {
-        Some(ParsedAttribute::Tag(i)) => {
+        | Some(ParsedAttribute::Tag(i)) => {
             assert_eq!(i.to_string(), String::from("result"));
-        }
-        x => panic!("Unexpected attribute: {:?}", x),
+        },
+        | x => panic!("Unexpected attribute: {:?}", x),
     }
     match iter.next() {
-        Some(ParsedAttribute::Property(key, val)) => {
+        | Some(ParsedAttribute::Property(key, val)) => {
             assert_eq!(key.to_string(), String::from("foo"));
             assert_eq!(val.to_string(), String::from("\"bar\""));
-        }
-        x => panic!("Unexpected attribute: {:?}", x),
+        },
+        | x => panic!("Unexpected attribute: {:?}", x),
     }
     match iter.next() {
-        Some(ParsedAttribute::Tag(i)) => {
+        | Some(ParsedAttribute::Tag(i)) => {
             assert_eq!(i.to_string(), String::from("baz"));
-        }
-        x => panic!("Unexpected attribute: {:?}", x),
+        },
+        | x => panic!("Unexpected attribute: {:?}", x),
     }
 }

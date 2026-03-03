@@ -1,6 +1,14 @@
-use super::{GenEnum, GenStruct, GenerateMod, Impl, ImplFor, StreamBuilder, StringOrIdent};
-use crate::parse::{GenericConstraints, Generics};
-use crate::prelude::{Ident, TokenStream};
+use super::GenEnum;
+use super::GenStruct;
+use super::GenerateMod;
+use super::Impl;
+use super::ImplFor;
+use super::StreamBuilder;
+use super::StringOrIdent;
+use crate::parse::GenericConstraints;
+use crate::parse::Generics;
+use crate::prelude::Ident;
+use crate::prelude::TokenStream;
 
 #[must_use]
 /// The generator is used to generate code.
@@ -30,6 +38,7 @@ impl Generator {
     }
 
     /// Return the name for the struct or enum that this is going to be implemented on.
+    #[must_use]
     pub fn target_name(&self) -> Ident {
         self.name.clone()
     }
@@ -50,10 +59,13 @@ impl Generator {
         Impl::with_parent_name(self)
     }
 
-    /// Generate an `for <trait_name> for <target_name>` implementation. See [ImplFor] for more information.
+    /// Generate an `for <trait_name> for <target_name>` implementation. See [`ImplFor`] for more information.
     ///
     /// This will default to the type that is associated with this generator. If you need to generate an impl for another type you can use `impl_trait_for_other_type`
-    pub fn impl_for(&mut self, trait_name: impl Into<String>) -> ImplFor<'_, Self> {
+    pub fn impl_for(
+        &mut self,
+        trait_name: impl Into<String>,
+    ) -> ImplFor<'_, Self> {
         ImplFor::new(
             self,
             self.name.clone().into(),
@@ -61,7 +73,7 @@ impl Generator {
         )
     }
 
-    /// Generate an `impl <type_name>` block. See [ImplFor] for more information.
+    /// Generate an `impl <type_name>` block. See [`ImplFor`] for more information.
     /// ```
     /// # use virtue::prelude::*;
     /// # let mut generator = Generator::with_name("Baz");
@@ -78,7 +90,7 @@ impl Generator {
         ImplFor::new(self, type_name.into(), None)
     }
 
-    /// Generate an `impl <trait_name> for <type_name>` block. See [ImplFor] for more information.
+    /// Generate an `impl <trait_name> for <type_name>` block. See [`ImplFor`] for more information.
     /// ```
     /// # use virtue::prelude::*;
     /// # let mut generator = Generator::with_name("Baz");
@@ -96,7 +108,7 @@ impl Generator {
         ImplFor::new(self, type_name.into(), Some(trait_name.into()))
     }
 
-    /// Generate an `for <..lifetimes> <trait_name> for <target_name>` implementation. See [ImplFor] for more information.
+    /// Generate an `for <..lifetimes> <trait_name> for <target_name>` implementation. See [`ImplFor`] for more information.
     ///
     /// Note:
     /// - Lifetimes should _not_ have the leading apostrophe.
@@ -118,7 +130,9 @@ impl Generator {
     /// # use virtue::prelude::*;
     /// # let mut generator = Generator::with_name("Bar").with_lifetime("a");
     /// // given a derive on `struct<'a> Bar<'a>`
-    /// generator.impl_for_with_lifetimes("Foo", ["b"]).new_lifetimes_depend_on_existing();
+    /// generator
+    ///     .impl_for_with_lifetimes("Foo", ["b"])
+    ///     .new_lifetimes_depend_on_existing();
     ///
     /// // will output:
     /// // impl<'a, 'b> Foo<'b> for Bar<'a> where 'b: 'a { }
@@ -139,17 +153,26 @@ impl Generator {
     }
 
     /// Generate a struct with the given name. See [`GenStruct`] for more info.
-    pub fn generate_struct(&mut self, name: impl Into<String>) -> GenStruct<'_, Self> {
+    pub fn generate_struct(
+        &mut self,
+        name: impl Into<String>,
+    ) -> GenStruct<'_, Self> {
         GenStruct::new(self, name)
     }
 
     /// Generate an enum with the given name. See [`GenEnum`] for more info.
-    pub fn generate_enum(&mut self, name: impl Into<String>) -> GenEnum<'_, Self> {
+    pub fn generate_enum(
+        &mut self,
+        name: impl Into<String>,
+    ) -> GenEnum<'_, Self> {
         GenEnum::new(self, name)
     }
 
     /// Generate a `mod <name> { ... }`. See [`GenerateMod`] for more info.
-    pub fn generate_mod(&mut self, mod_name: impl Into<String>) -> GenerateMod<'_, Self> {
+    pub fn generate_mod(
+        &mut self,
+        mod_name: impl Into<String>,
+    ) -> GenerateMod<'_, Self> {
         GenerateMod::new(self, mod_name)
     }
 
@@ -159,7 +182,12 @@ impl Generator {
     /// Will return `true` if the file is written, `false` otherwise.
     ///
     /// The outputted file is unformatted. Use `cargo fmt -- target/generated/<crate_name>/<file>.rs` to format the file.
-    pub fn export_to_file(&self, crate_name: &str, file_postfix: &str) -> bool {
+    #[must_use]
+    pub fn export_to_file(
+        &self,
+        crate_name: &str,
+        file_postfix: &str,
+    ) -> bool {
         use std::io::Write;
 
         if let Ok(var) = std::env::var("CARGO_MANIFEST_DIR") {
@@ -208,8 +236,12 @@ impl Generator {
             None,
         )
     }
+
     /// Add a lifetime to this generator.
-    pub fn with_lifetime(mut self, lt: &str) -> Self {
+    pub fn with_lifetime(
+        mut self,
+        lt: &str,
+    ) -> Self {
         self.generics
             .get_or_insert_with(|| Generics(Vec::new()))
             .push(crate::parse::Generic::Lifetime(crate::parse::Lifetime {
@@ -218,8 +250,12 @@ impl Generator {
             }));
         self
     }
+
     /// Assert that the generated code in this generator matches the given string. This is useful for testing purposes in combination with the `with_name` function.
-    pub fn assert_eq(&self, expected: &str) {
+    pub fn assert_eq(
+        &self,
+        expected: &str,
+    ) {
         assert_eq!(expected, self.stream.stream.to_string());
     }
 }
@@ -235,7 +271,10 @@ impl Drop for Generator {
 }
 
 impl super::Parent for Generator {
-    fn append(&mut self, builder: StreamBuilder) {
+    fn append(
+        &mut self,
+        builder: StreamBuilder,
+    ) {
         self.stream.append(builder);
     }
 
@@ -277,7 +316,7 @@ mod test {
                 .collect::<String>(),
         );
 
-        //with simple generics
+        // with simple generics
         let mut generator = Generator::new(
             Ident::new("StructOrEnum", Span::call_site()),
             Generics::try_take(&mut token_stream("<T1, T2>")).unwrap(),
@@ -338,7 +377,7 @@ mod test {
 
     #[test]
     fn impl_for_with_impl_generics() {
-        //with simple generics
+        // with simple generics
         let mut generator = Generator::new(
             Ident::new("StructOrEnum", Span::call_site()),
             Generics::try_take(&mut token_stream("<T1, T2>")).unwrap(),

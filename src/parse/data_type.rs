@@ -1,22 +1,24 @@
-use crate::prelude::{Ident, TokenTree};
-use crate::{Error, Result};
+use crate::Error;
+use crate::Result;
+use crate::prelude::Ident;
+use crate::prelude::TokenTree;
 use std::iter::Peekable;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) enum DataType {
+pub enum DataType {
     Enum,
     Struct,
 }
 
 impl DataType {
     pub(crate) fn take(
-        input: &mut Peekable<impl Iterator<Item = TokenTree>>,
+        input: &mut Peekable<impl Iterator<Item = TokenTree>>
     ) -> Result<(Self, Ident)> {
         if let Some(ident) = super::utils::consume_ident(input) {
             let result = match ident.to_string().as_str() {
-                "struct" => DataType::Struct,
-                "enum" => DataType::Enum,
-                _ => return Err(Error::UnknownDataType(ident.span())),
+                | "struct" => Self::Struct,
+                | "enum" => Self::Enum,
+                | _ => return Err(Error::UnknownDataType(ident.span())),
             };
 
             if let Some(ident) = super::utils::consume_ident(input) {
@@ -31,7 +33,11 @@ impl DataType {
 fn test_datatype_take() {
     use crate::token_stream;
 
-    fn validate_output_eq(input: &str, expected_dt: DataType, expected_ident: &str) {
+    fn validate_output_eq(
+        input: &str,
+        expected_dt: DataType,
+        expected_ident: &str,
+    ) {
         let (dt, ident) = DataType::take(&mut token_stream(input)).unwrap_or_else(|e| {
             panic!("Could not parse tokenstream {:?}: {:?}", input, e);
         });

@@ -1,10 +1,20 @@
-use super::{
-    AttributeContainer, Field, FieldBuilder, Impl, ImplFor, Parent, Path, StreamBuilder,
-    StringOrIdent,
-};
+use super::AttributeContainer;
+use super::Field;
+use super::FieldBuilder;
+use super::Impl;
+use super::ImplFor;
+use super::Parent;
+use super::Path;
+use super::StreamBuilder;
+use super::StringOrIdent;
 use crate::Result;
-use crate::parse::{Generic, Generics, Visibility};
-use crate::prelude::{Delimiter, Ident, Span, TokenStream};
+use crate::parse::Generic;
+use crate::parse::Generics;
+use crate::parse::Visibility;
+use crate::prelude::Delimiter;
+use crate::prelude::Ident;
+use crate::prelude::Span;
+use crate::prelude::TokenStream;
 
 /// Builder to generate an `enum <Name> { <value> { ... }, ... }`
 ///
@@ -34,10 +44,7 @@ use crate::prelude::{Delimiter, Ident, Span, TokenStream};
 /// ```
 /// enum Foo {
 ///     ZST,
-///     Named {
-///         bar: u16,
-///         baz: String,
-///     },
+///     Named { bar: u16, baz: String },
 ///     Unnamed(u16, String),
 /// };
 /// ```
@@ -53,7 +60,10 @@ pub struct GenEnum<'a, P: Parent> {
 }
 
 impl<'a, P: Parent> GenEnum<'a, P> {
-    pub(crate) fn new(parent: &'a mut P, name: impl Into<String>) -> Self {
+    pub(crate) fn new(
+        parent: &'a mut P,
+        name: impl Into<String>,
+    ) -> Self {
         Self {
             parent,
             name: Ident::new(name.into().as_str(), Span::call_site()),
@@ -67,7 +77,7 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     }
 
     /// Make the enum `pub`. By default the struct will have no visibility modifier and will only be visible in the current scope.
-    pub fn make_pub(&mut self) -> &mut Self {
+    pub const fn make_pub(&mut self) -> &mut Self {
         self.visibility = Visibility::Pub;
         self
     }
@@ -91,7 +101,10 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// ```ignore
     /// #[derive(Clone, Default, serde::Deserialize)]
     /// enum Foo { }
-    pub fn with_derive(&mut self, derive: impl Into<Path>) -> &mut Self {
+    pub fn with_derive(
+        &mut self,
+        derive: impl Into<Path>,
+    ) -> &mut Self {
         AttributeContainer::with_derive(self, derive)
     }
 
@@ -101,13 +114,11 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// # use virtue::prelude::Generator;
     /// # use virtue::generate::Path;
     /// # let mut generator = Generator::with_name("Bar");
-    /// generator
-    ///     .generate_enum("Foo")
-    ///     .with_derives([
-    ///         "Clone".into(),
-    ///         "Default".into(),
-    ///         Path::from_iter(vec!["serde", "Deserialize"]),
-    ///     ]);
+    /// generator.generate_enum("Foo").with_derives([
+    ///     "Clone".into(),
+    ///     "Default".into(),
+    ///     Path::from_iter(vec!["serde", "Deserialize"]),
+    /// ]);
     /// # generator.assert_eq("# [derive (Clone , Default , serde ::Deserialize)] enum Foo { }");
     /// # Ok::<_, virtue::Error>(())
     /// ```
@@ -171,7 +182,10 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// #[serde(untagged)]
     /// enum Foo { }
     /// ```
-    pub fn with_parsed_attribute(&mut self, attribute: impl AsRef<str>) -> Result<&mut Self> {
+    pub fn with_parsed_attribute(
+        &mut self,
+        attribute: impl AsRef<str>,
+    ) -> Result<&mut Self> {
         AttributeContainer::with_parsed_attribute(self, attribute)
     }
 
@@ -195,7 +209,10 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// #[serde(untagged)]
     /// enum Foo { }
     /// ```
-    pub fn with_attribute_stream(&mut self, attribute: impl Into<TokenStream>) -> &mut Self {
+    pub fn with_attribute_stream(
+        &mut self,
+        attribute: impl Into<TokenStream>,
+    ) -> &mut Self {
         AttributeContainer::with_attribute_stream(self, attribute)
     }
 
@@ -238,7 +255,11 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// # let mut generator = Generator::with_name("Bar").with_lifetime("a");
     /// generator
     ///     .generate_enum("Foo")
-    ///     .with_generics([Lifetime { ident: Ident::new("a", Span::call_site()), constraint: vec![] }.into()])
+    ///     .with_generics([Lifetime {
+    ///         ident: Ident::new("a", Span::call_site()),
+    ///         constraint: vec![],
+    ///     }
+    ///     .into()])
     ///     .add_value("Bar")
     ///     .make_tuple()
     ///     .add_field("bar", "&'a str");
@@ -252,7 +273,10 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     ///     Bar(&'a str)
     /// }
     /// ```
-    pub fn with_generics(&mut self, generics: impl IntoIterator<Item = Generic>) -> &mut Self {
+    pub fn with_generics(
+        &mut self,
+        generics: impl IntoIterator<Item = Generic>,
+    ) -> &mut Self {
         self.generics
             .get_or_insert_with(|| Generics(Vec::new()))
             .extend(generics);
@@ -268,7 +292,13 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     /// # let mut generator = Generator::with_name("Bar").with_lifetime("a");
     /// generator
     ///     .generate_enum("Foo")
-    ///     .with_generic(Lifetime { ident: Ident::new("a", Span::call_site()), constraint: vec![] }.into())
+    ///     .with_generic(
+    ///         Lifetime {
+    ///             ident: Ident::new("a", Span::call_site()),
+    ///             constraint: vec![],
+    ///         }
+    ///         .into(),
+    ///     )
     ///     .add_value("Bar")
     ///     .make_tuple()
     ///     .add_field("bar", "&'a str");
@@ -282,7 +312,10 @@ impl<'a, P: Parent> GenEnum<'a, P> {
     ///     Bar(&'a str)
     /// }
     /// ```
-    pub fn with_generic(&mut self, generic: Generic) -> &mut Self {
+    pub fn with_generic(
+        &mut self,
+        generic: Generic,
+    ) -> &mut Self {
         self.generics
             .get_or_insert_with(|| Generics(Vec::new()))
             .push(generic);
@@ -291,14 +324,20 @@ impl<'a, P: Parent> GenEnum<'a, P> {
 
     /// Add an enum value
     ///
-    /// Returns a builder for the value that's similar to GenStruct
-    pub fn add_value(&mut self, name: impl Into<String>) -> &mut EnumValue {
+    /// Returns a builder for the value that's similar to `GenStruct`
+    pub fn add_value(
+        &mut self,
+        name: impl Into<String>,
+    ) -> &mut EnumValue {
         self.values.push(EnumValue::new(name));
         self.values.last_mut().unwrap()
     }
 
     /// Add an `impl <name> for <enum>`
-    pub fn impl_for(&mut self, name: impl Into<StringOrIdent>) -> ImplFor<'_, Self> {
+    pub fn impl_for(
+        &mut self,
+        name: impl Into<StringOrIdent>,
+    ) -> ImplFor<'_, Self> {
         ImplFor::new(self, name.into(), None)
     }
 
@@ -327,8 +366,11 @@ impl<P: Parent> AttributeContainer for GenEnum<'_, P> {
     }
 }
 
-impl<'a, P: Parent> Parent for GenEnum<'a, P> {
-    fn append(&mut self, builder: StreamBuilder) {
+impl<P: Parent> Parent for GenEnum<'_, P> {
+    fn append(
+        &mut self,
+        builder: StreamBuilder,
+    ) {
         self.additional.push(builder);
     }
 
@@ -345,7 +387,7 @@ impl<'a, P: Parent> Parent for GenEnum<'a, P> {
     }
 }
 
-impl<'a, P: Parent> Drop for GenEnum<'a, P> {
+impl<P: Parent> Drop for GenEnum<'_, P> {
     fn drop(&mut self) {
         let mut builder = StreamBuilder::new();
         self.build_derives(&mut builder)
@@ -362,7 +404,7 @@ impl<'a, P: Parent> Drop for GenEnum<'a, P> {
                     .unwrap_or_default(),
             )
             .group(Delimiter::Brace, |b| {
-                for value in self.values.iter_mut() {
+                for value in &mut self.values {
                     build_value(b, value)?;
                 }
 
@@ -377,35 +419,42 @@ impl<'a, P: Parent> Drop for GenEnum<'a, P> {
     }
 }
 
-fn build_value(builder: &mut StreamBuilder, value: &mut EnumValue) -> Result {
+fn build_value(
+    builder: &mut StreamBuilder,
+    value: &mut EnumValue,
+) -> Result {
     value.build_attributes(builder);
     builder.ident(value.name.clone());
 
     match value.value_type {
-        ValueType::Named => builder.group(Delimiter::Brace, |b| {
-            for field in value.fields.iter_mut() {
-                field.build_attributes(b);
-                if field.vis == Visibility::Pub {
-                    b.ident_str("pub");
+        | ValueType::Named => {
+            builder.group(Delimiter::Brace, |b| {
+                for field in &mut value.fields {
+                    field.build_attributes(b);
+                    if field.vis == Visibility::Pub {
+                        b.ident_str("pub");
+                    }
+                    b.ident_str(&field.name)
+                        .punct(':')
+                        .push_parsed(&field.ty)?
+                        .punct(',');
                 }
-                b.ident_str(&field.name)
-                    .punct(':')
-                    .push_parsed(&field.ty)?
-                    .punct(',');
-            }
-            Ok(())
-        })?,
-        ValueType::Unnamed => builder.group(Delimiter::Parenthesis, |b| {
-            for field in value.fields.iter_mut() {
-                field.build_attributes(b);
-                if field.vis == Visibility::Pub {
-                    b.ident_str("pub");
+                Ok(())
+            })?
+        },
+        | ValueType::Unnamed => {
+            builder.group(Delimiter::Parenthesis, |b| {
+                for field in &mut value.fields {
+                    field.build_attributes(b);
+                    if field.vis == Visibility::Pub {
+                        b.ident_str("pub");
+                    }
+                    b.push_parsed(&field.ty)?.punct(',');
                 }
-                b.push_parsed(&field.ty)?.punct(',');
-            }
-            Ok(())
-        })?,
-        ValueType::Zst => builder,
+                Ok(())
+            })?
+        },
+        | ValueType::Zst => builder,
     };
 
     builder.punct(',');
@@ -433,7 +482,7 @@ impl EnumValue {
     /// Make the struct a zero-sized type (no fields)
     ///
     /// Any fields will be ignored
-    pub fn make_zst(&mut self) -> &mut Self {
+    pub const fn make_zst(&mut self) -> &mut Self {
         self.value_type = ValueType::Zst;
         self
     }
@@ -441,7 +490,7 @@ impl EnumValue {
     /// Make the struct fields unnamed
     ///
     /// The names of any field will be ignored
-    pub fn make_tuple(&mut self) -> &mut Self {
+    pub const fn make_tuple(&mut self) -> &mut Self {
         self.value_type = ValueType::Unnamed;
         self
     }
@@ -497,7 +546,10 @@ impl EnumValue {
     ///     Bar { }
     /// }
     /// ```
-    pub fn with_parsed_attribute(&mut self, attribute: impl AsRef<str>) -> Result<&mut Self> {
+    pub fn with_parsed_attribute(
+        &mut self,
+        attribute: impl AsRef<str>,
+    ) -> Result<&mut Self> {
         AttributeContainer::with_parsed_attribute(self, attribute)
     }
 
@@ -506,7 +558,9 @@ impl EnumValue {
     /// ```
     /// # use virtue::prelude::{Generator, TokenStream};
     /// # let mut generator = Generator::with_name("Bar");
-    /// let attribute = "serde(rename_all = \"camelCase\")".parse::<TokenStream>().unwrap();
+    /// let attribute = "serde(rename_all = \"camelCase\")"
+    ///     .parse::<TokenStream>()
+    ///     .unwrap();
     /// generator
     ///     .generate_enum("Foo")
     ///     .add_value("Bar")
@@ -522,7 +576,10 @@ impl EnumValue {
     ///     Bar { }
     /// }
     /// ```
-    pub fn with_attribute_stream(&mut self, attribute: impl Into<TokenStream>) -> &mut Self {
+    pub fn with_attribute_stream(
+        &mut self,
+        attribute: impl Into<TokenStream>,
+    ) -> &mut Self {
         AttributeContainer::with_attribute_stream(self, attribute)
     }
 
@@ -545,10 +602,7 @@ impl EnumValue {
     /// Generates:
     /// ```
     /// enum Foo {
-    ///     Bar {
-    ///         bar: u16,
-    ///         baz: String
-    ///     }
+    ///     Bar { bar: u16, baz: String },
     /// };
     /// ```
     pub fn add_field(

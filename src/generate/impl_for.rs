@@ -1,8 +1,13 @@
-use super::{FnBuilder, GenConst, Parent, StreamBuilder, StringOrIdent, generate_item::FnParent};
-use crate::{
-    parse::{GenericConstraints, Generics},
-    prelude::{Delimiter, Result},
-};
+use super::FnBuilder;
+use super::GenConst;
+use super::Parent;
+use super::StreamBuilder;
+use super::StringOrIdent;
+use super::generate_item::FnParent;
+use crate::parse::GenericConstraints;
+use crate::parse::Generics;
+use crate::prelude::Delimiter;
+use crate::prelude::Result;
 
 #[must_use]
 /// A helper struct for implementing a trait for a given struct or enum.
@@ -23,7 +28,7 @@ pub struct ImplFor<'a, P: Parent> {
 }
 
 impl<'a, P: Parent> ImplFor<'a, P> {
-    pub(super) fn new(
+    pub(super) const fn new(
         generator: &'a mut P,
         type_name: StringOrIdent,
         trait_name: Option<StringOrIdent>,
@@ -46,7 +51,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     }
 
     /// Internal helper function to set lifetimes
-    pub(crate) fn with_lifetimes<ITER>(mut self, lifetimes: ITER) -> Self
+    pub(crate) fn with_lifetimes<ITER>(
+        mut self,
+        lifetimes: ITER,
+    ) -> Self
     where
         ITER: IntoIterator,
         ITER::Item: Into<String>,
@@ -63,20 +71,20 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     ///
     /// [`impl_for_with_lifetimes`]: struct.Generator.html#method.impl_for_with_lifetimes
     pub fn new_lifetimes_depend_on_existing(mut self) -> Self {
-        if let Some(new_lt) = &self.lifetimes {
-            if let Some(generics) = self.generator.generics() {
-                let constraints = self.custom_generic_constraints.get_or_insert_with(|| {
-                    self.generator
-                        .generic_constraints()
-                        .cloned()
-                        .unwrap_or_default()
-                });
-                for old_lt in generics.iter_lifetimes() {
-                    for new_lt in new_lt {
-                        constraints
-                            .push_parsed_constraint(format!("'{}: '{}", new_lt, old_lt.ident))
-                            .expect("Could not ensure new lifetimes depend on existing lifetimes");
-                    }
+        if let Some(new_lt) = &self.lifetimes
+            && let Some(generics) = self.generator.generics()
+        {
+            let constraints = self.custom_generic_constraints.get_or_insert_with(|| {
+                self.generator
+                    .generic_constraints()
+                    .cloned()
+                    .unwrap_or_default()
+            });
+            for old_lt in generics.iter_lifetimes() {
+                for new_lt in new_lt {
+                    constraints
+                        .push_parsed_constraint(format!("'{}: '{}", new_lt, old_lt.ident))
+                        .expect("Could not ensure new lifetimes depend on existing lifetimes");
                 }
             }
         }
@@ -91,17 +99,16 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// ```ignore
     /// unsafe impl Foo for Bar { }
     /// ```
-    pub fn make_unsafe(mut self) -> Self {
+    pub const fn make_unsafe(mut self) -> Self {
         self.is_unsafe = true;
         self
     }
 
     /// Add generic parameters to the trait implementation.
-    ///```
+    /// ```
     /// # use virtue::prelude::Generator;
     /// # let mut generator = Generator::with_name("Bar");
-    /// generator.impl_for("Foo")
-    ///          .with_trait_generics(["Baz"]);
+    /// generator.impl_for("Foo").with_trait_generics(["Baz"]);
     /// # generator.assert_eq("impl Foo < Baz > for Bar { }");
     /// # Ok::<_, virtue::Error>(())
     /// ```
@@ -111,7 +118,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// impl Foo for <struct or enum> {
     ///     const BAR: u8 = 5;
     /// }
-    pub fn with_trait_generics<ITER>(mut self, generics: ITER) -> Self
+    pub fn with_trait_generics<ITER>(
+        mut self,
+        generics: ITER,
+    ) -> Self
     where
         ITER: IntoIterator,
         ITER::Item: Into<String>,
@@ -121,11 +131,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     }
 
     /// Add generic parameters to the impl block.
-    ///```
+    /// ```
     /// # use virtue::prelude::Generator;
     /// # let mut generator = Generator::with_name("Bar");
-    /// generator.impl_for("Foo")
-    ///          .with_impl_generics(["Baz"]);
+    /// generator.impl_for("Foo").with_impl_generics(["Baz"]);
     /// # generator.assert_eq("impl < Baz > Foo for Bar { }");
     /// # Ok::<_, virtue::Error>(())
     /// ```
@@ -134,7 +143,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// ```ignore
     /// impl<Baz> Foo for Bar { }
     /// ```
-    pub fn with_impl_generics<ITER>(mut self, generics: ITER) -> Self
+    pub fn with_impl_generics<ITER>(
+        mut self,
+        generics: ITER,
+    ) -> Self
     where
         ITER: IntoIterator,
         ITER::Item: Into<String>,
@@ -144,7 +156,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     }
 
     /// Add a outer attribute to the trait implementation
-    pub fn impl_outer_attr(&mut self, attr: impl AsRef<str>) -> Result {
+    pub fn impl_outer_attr(
+        &mut self,
+        attr: impl AsRef<str>,
+    ) -> Result {
         let mut builder = StreamBuilder::new();
         builder.punct('#').group(Delimiter::Bracket, |builder| {
             builder.push_parsed(attr)?;
@@ -155,7 +170,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     }
 
     /// Add a inner attribute to the trait implementation
-    pub fn impl_inner_attr(&mut self, attr: impl AsRef<str>) -> Result {
+    pub fn impl_inner_attr(
+        &mut self,
+        attr: impl AsRef<str>,
+    ) -> Result {
         let mut builder = StreamBuilder::new();
         builder
             .punct('#')
@@ -172,12 +190,13 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// ```
     /// # use virtue::prelude::Generator;
     /// # let mut generator = Generator::with_name("Bar");
-    /// generator.impl_for("Foo")
-    ///          .generate_const("BAR", "u8")
-    ///          .with_value(|b| {
-    ///             b.push_parsed("5")?;
-    ///             Ok(())
-    ///          })?;
+    /// generator
+    ///     .impl_for("Foo")
+    ///     .generate_const("BAR", "u8")
+    ///     .with_value(|b| {
+    ///         b.push_parsed("5")?;
+    ///         Ok(())
+    ///     })?;
     /// # generator.assert_eq("impl Foo for Bar { const BAR : u8 = 5 ; }");
     /// # Ok::<_, virtue::Error>(())
     /// ```
@@ -206,7 +225,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// ```
     ///
     /// See [`FnBuilder`] for more options, as well as information on how to fill the function body.
-    pub fn generate_fn(&mut self, name: impl Into<String>) -> FnBuilder<'_, ImplFor<'a, P>> {
+    pub fn generate_fn(
+        &mut self,
+        name: impl Into<String>,
+    ) -> FnBuilder<'_, Self> {
         FnBuilder::new(self, name)
     }
 
@@ -219,7 +241,11 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     ///     type Bar = u8;
     /// }
     /// ```
-    pub fn impl_type(&mut self, name: impl AsRef<str>, value: impl AsRef<str>) -> Result {
+    pub fn impl_type(
+        &mut self,
+        name: impl AsRef<str>,
+        value: impl AsRef<str>,
+    ) -> Result {
         let mut builder = StreamBuilder::new();
         builder
             .ident_str("type")
@@ -231,7 +257,6 @@ impl<'a, P: Parent> ImplFor<'a, P> {
         Ok(())
     }
 
-    ///
     /// Modify the generic constraints of a type.
     /// This can be used to add additional type constraints to your implementation.
     ///
@@ -257,8 +282,10 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     /// {
     /// }
     /// ```
-    ///
-    pub fn modify_generic_constraints<CB>(&mut self, cb: CB) -> Result<&mut Self>
+    pub fn modify_generic_constraints<CB>(
+        &mut self,
+        cb: CB,
+    ) -> Result<&mut Self>
     where
         CB: FnOnce(&Generics, &mut GenericConstraints) -> Result,
     {
@@ -275,8 +302,12 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     }
 }
 
-impl<'a, P: Parent> FnParent for ImplFor<'a, P> {
-    fn append(&mut self, fn_definition: StreamBuilder, fn_body: StreamBuilder) -> Result {
+impl<P: Parent> FnParent for ImplFor<'_, P> {
+    fn append(
+        &mut self,
+        fn_definition: StreamBuilder,
+        fn_body: StreamBuilder,
+    ) -> Result {
         self.fns.push((fn_definition, fn_body));
         Ok(())
     }
@@ -323,7 +354,10 @@ impl<P: Parent> Drop for ImplFor<'_, P> {
 }
 
 impl<P: Parent> ImplFor<'_, P> {
-    fn generate_impl_definition(&mut self, builder: &mut StreamBuilder) {
+    fn generate_impl_definition(
+        &mut self,
+        builder: &mut StreamBuilder,
+    ) {
         if self.is_unsafe {
             builder.ident_str("unsafe");
         }
@@ -339,7 +373,7 @@ impl<P: Parent> ImplFor<'_, P> {
         } else if let Some(generics) = self.generator.generics() {
             builder.append(generics.impl_generics_with_additional(&[], impl_generics));
         } else if !impl_generics.is_empty() {
-            append_lifetimes_and_generics(builder, &[], impl_generics)
+            append_lifetimes_and_generics(builder, &[], impl_generics);
         }
         if let Some(t) = &self.trait_name {
             builder.push_parsed(t.to_string()).unwrap();
@@ -354,14 +388,14 @@ impl<P: Parent> ImplFor<'_, P> {
             builder.append(generics.type_generics());
         }
         match self.custom_generic_constraints.take() {
-            Some(generic_constraints) => {
+            | Some(generic_constraints) => {
                 builder.append(generic_constraints.where_clause());
-            }
-            _ => {
+            },
+            | _ => {
                 if let Some(generic_constraints) = &self.generator.generic_constraints() {
                     builder.append(generic_constraints.where_clause());
                 }
-            }
+            },
         }
     }
 }

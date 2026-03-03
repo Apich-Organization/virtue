@@ -9,12 +9,23 @@ mod generics;
 mod utils;
 mod visibility;
 
-pub use self::attributes::{Attribute, AttributeAccess, AttributeLocation, FromAttribute};
-pub use self::body::{EnumBody, EnumVariant, Fields, IdentOrIndex, StructBody, UnnamedField};
+pub use self::attributes::Attribute;
+pub use self::attributes::AttributeAccess;
+pub use self::attributes::AttributeLocation;
+pub use self::attributes::FromAttribute;
+pub use self::body::EnumBody;
+pub use self::body::EnumVariant;
+pub use self::body::Fields;
+pub use self::body::IdentOrIndex;
+pub use self::body::StructBody;
+pub use self::body::UnnamedField;
 pub(crate) use self::data_type::DataType;
-pub use self::generics::{
-    ConstGeneric, Generic, GenericConstraints, Generics, Lifetime, SimpleGeneric,
-};
+pub use self::generics::ConstGeneric;
+pub use self::generics::Generic;
+pub use self::generics::GenericConstraints;
+pub use self::generics::Generics;
+pub use self::generics::Lifetime;
+pub use self::generics::SimpleGeneric;
 pub use self::visibility::Visibility;
 
 use crate::generate::Generator;
@@ -78,7 +89,7 @@ impl Parse {
         let generics = Generics::try_take(source)?;
         let generic_constraints = GenericConstraints::try_take(source)?;
         match datatype {
-            DataType::Struct => {
+            | DataType::Struct => {
                 let body = StructBody::take(source)?;
                 Ok(Self::Struct {
                     attributes,
@@ -88,8 +99,8 @@ impl Parse {
                     generic_constraints,
                     body,
                 })
-            }
-            DataType::Enum => {
+            },
+            | DataType::Enum => {
                 let body = EnumBody::take(source)?;
                 Ok(Self::Enum {
                     attributes,
@@ -99,37 +110,41 @@ impl Parse {
                     generic_constraints,
                     body,
                 })
-            }
+            },
         }
     }
 
     /// Split this struct or enum into a [`Generator`], list of [`Attribute`] and [`Body`].
     pub fn into_generator(self) -> (Generator, Vec<Attribute>, Body) {
         match self {
-            Parse::Struct {
+            | Self::Struct {
                 name,
                 generics,
                 generic_constraints,
                 body,
                 attributes,
                 ..
-            } => (
-                Generator::new(name, generics, generic_constraints),
-                attributes,
-                Body::Struct(body),
-            ),
-            Parse::Enum {
+            } => {
+                (
+                    Generator::new(name, generics, generic_constraints),
+                    attributes,
+                    Body::Struct(body),
+                )
+            },
+            | Self::Enum {
                 name,
                 generics,
                 generic_constraints,
                 body,
                 attributes,
                 ..
-            } => (
-                Generator::new(name, generics, generic_constraints),
-                attributes,
-                Body::Enum(body),
-            ),
+            } => {
+                (
+                    Generator::new(name, generics, generic_constraints),
+                    attributes,
+                    Body::Enum(body),
+                )
+            },
         }
     }
 }

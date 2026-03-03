@@ -1,9 +1,13 @@
-use super::{GenEnum, GenStruct, Impl, Parent, StreamBuilder};
-use crate::{
-    Result,
-    parse::Visibility,
-    prelude::{Delimiter, Ident, Span},
-};
+use super::GenEnum;
+use super::GenStruct;
+use super::Impl;
+use super::Parent;
+use super::StreamBuilder;
+use crate::Result;
+use crate::parse::Visibility;
+use crate::prelude::Delimiter;
+use crate::prelude::Ident;
+use crate::prelude::Span;
 
 /// Builder for generating a module with its contents.
 pub struct GenerateMod<'a, P: Parent> {
@@ -15,7 +19,10 @@ pub struct GenerateMod<'a, P: Parent> {
 }
 
 impl<'a, P: Parent> GenerateMod<'a, P> {
-    pub(crate) fn new(parent: &'a mut P, name: impl Into<String>) -> Self {
+    pub(crate) fn new(
+        parent: &'a mut P,
+        name: impl Into<String>,
+    ) -> Self {
         Self {
             parent,
             name: Ident::new(name.into().as_str(), Span::call_site()),
@@ -36,7 +43,10 @@ impl<'a, P: Parent> GenerateMod<'a, P> {
     /// ```
     ///
     /// This is especially useful with `.add_use("super::*");`, which will pull all parent imports into scope
-    pub fn add_use(&mut self, r#use: impl AsRef<str>) -> Result {
+    pub fn add_use(
+        &mut self,
+        r#use: impl AsRef<str>,
+    ) -> Result {
         let mut builder = StreamBuilder::new();
         builder.ident_str("use").push_parsed(r#use)?.punct(';');
         self.uses.push(builder);
@@ -44,17 +54,26 @@ impl<'a, P: Parent> GenerateMod<'a, P> {
     }
 
     /// Generate a struct with the given name. See [`GenStruct`] for more info.
-    pub fn generate_struct(&mut self, name: impl Into<String>) -> GenStruct<'_, Self> {
+    pub fn generate_struct(
+        &mut self,
+        name: impl Into<String>,
+    ) -> GenStruct<'_, Self> {
         GenStruct::new(self, name)
     }
 
     /// Generate an enum with the given name. See [`GenEnum`] for more info.
-    pub fn generate_enum(&mut self, name: impl Into<String>) -> GenEnum<'_, Self> {
+    pub fn generate_enum(
+        &mut self,
+        name: impl Into<String>,
+    ) -> GenEnum<'_, Self> {
         GenEnum::new(self, name)
     }
 
     /// Generate an `impl <name>` implementation. See [`Impl`] for more information.
-    pub fn r#impl(&mut self, name: impl Into<String>) -> Impl<'_, Self> {
+    pub fn r#impl(
+        &mut self,
+        name: impl Into<String>,
+    ) -> Impl<'_, Self> {
         Impl::new(self, name)
     }
 
@@ -63,12 +82,15 @@ impl<'a, P: Parent> GenerateMod<'a, P> {
     /// Alias for [`impl`] which doesn't need a `r#` prefix.
     ///
     /// [`impl`]: #method.impl
-    pub fn generate_impl(&mut self, name: impl Into<String>) -> Impl<'_, Self> {
+    pub fn generate_impl(
+        &mut self,
+        name: impl Into<String>,
+    ) -> Impl<'_, Self> {
         Impl::new(self, name)
     }
 }
 
-impl<'a, P: Parent> Drop for GenerateMod<'a, P> {
+impl<P: Parent> Drop for GenerateMod<'_, P> {
     fn drop(&mut self) {
         let mut builder = StreamBuilder::new();
         if self.vis == Visibility::Pub {
@@ -91,7 +113,10 @@ impl<'a, P: Parent> Drop for GenerateMod<'a, P> {
 }
 
 impl<P: Parent> Parent for GenerateMod<'_, P> {
-    fn append(&mut self, builder: StreamBuilder) {
+    fn append(
+        &mut self,
+        builder: StreamBuilder,
+    ) {
         self.content.append(builder);
     }
 

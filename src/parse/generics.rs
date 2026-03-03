@@ -1,27 +1,34 @@
-use super::utils::*;
+use super::utils::assume_ident;
+use super::utils::assume_punct;
+use super::utils::consume_punct_if;
+use super::utils::ident_eq;
+use super::utils::read_tokens_until_punct;
+use crate::Error;
+use crate::Result;
 use crate::generate::StreamBuilder;
-use crate::prelude::{Ident, TokenTree};
-use crate::{Error, Result};
+use crate::prelude::Ident;
+use crate::prelude::TokenTree;
 use std::iter::Peekable;
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
+use std::ops::DerefMut;
 
 /// A generic parameter for a struct or enum.
 ///
 /// ```
-/// use std::marker::PhantomData;
 /// use std::fmt::Display;
+/// use std::marker::PhantomData;
 ///
 /// // Generic will be `Generic::Generic("F")`
 /// struct Foo<F> {
-///     f: PhantomData<F>
+///     f: PhantomData<F>,
 /// }
 /// // Generics will be `Generic::Generic("F: Display")`
 /// struct Bar<F: Display> {
-///     f: PhantomData<F>
+///     f: PhantomData<F>,
 /// }
 /// // Generics will be `[Generic::Lifetime("a"), Generic::Generic("F: Display")]`
 /// struct Baz<'a, F> {
-///     f: PhantomData<&'a F>
+///     f: PhantomData<&'a F>,
 /// }
 /// ```
 #[derive(Debug, Clone)]
@@ -29,71 +36,78 @@ pub struct Generics(pub Vec<Generic>);
 
 impl Generics {
     pub(crate) fn try_take(
-        input: &mut Peekable<impl Iterator<Item = TokenTree>>,
-    ) -> Result<Option<Generics>> {
+        input: &mut Peekable<impl Iterator<Item = TokenTree>>
+    ) -> Result<Option<Self>> {
         let maybe_punct = input.peek();
-        if let Some(TokenTree::Punct(punct)) = maybe_punct {
-            if punct.as_char() == '<' {
-                let punct = assume_punct(input.next(), '<');
-                let mut result = Generics(Vec::new());
-                loop {
-                    match input.peek() {
-                        Some(TokenTree::Punct(punct)) if punct.as_char() == '\'' => {
-                            result.push(Lifetime::take(input)?.into());
-                            consume_punct_if(input, ',');
-                        }
-                        Some(TokenTree::Punct(punct)) if punct.as_char() == '>' => {
-                            assume_punct(input.next(), '>');
-                            break;
-                        }
-                        Some(TokenTree::Ident(ident)) if ident_eq(ident, "const") => {
-                            result.push(ConstGeneric::take(input)?.into());
-                            consume_punct_if(input, ',');
-                        }
-                        Some(TokenTree::Ident(_)) => {
-                            result.push(SimpleGeneric::take(input)?.into());
-                            consume_punct_if(input, ',');
-                        }
-                        x => {
-                            return Err(Error::InvalidRustSyntax {
-                                span: x.map(|x| x.span()).unwrap_or_else(|| punct.span()),
-                                expected: format!("', > or an ident, got {:?}", x),
-                            });
-                        }
-                    }
+        if let Some(TokenTree::Punct(punct)) = maybe_punct
+            && punct.as_char() == '<'
+        {
+            let punct = assume_punct(input.next(), '<');
+            let mut result = Self(Vec::new());
+            loop {
+                match input.peek() {
+                    | Some(TokenTree::Punct(punct)) if punct.as_char() == '\'' => {
+                        result.push(Lifetime::take(input)?.into());
+                        consume_punct_if(input, ',');
+                    },
+                    | Some(TokenTree::Punct(punct)) if punct.as_char() == '>' => {
+                        assume_punct(input.next(), '>');
+                        break;
+                    },
+                    | Some(TokenTree::Ident(ident)) if ident_eq(ident, "const") => {
+                        result.push(ConstGeneric::take(input)?.into());
+                        consume_punct_if(input, ',');
+                    },
+                    | Some(TokenTree::Ident(_)) => {
+                        result.push(SimpleGeneric::take(input)?.into());
+                        consume_punct_if(input, ',');
+                    },
+                    | x => {
+                        return Err(Error::InvalidRustSyntax {
+                            span: x.map_or_else(|| punct.span(), proc_macro2::TokenTree::span),
+                            expected: format!("', > or an ident, got {x:?}"),
+                        });
+                    },
                 }
-                return Ok(Some(result));
             }
+            return Ok(Some(result));
         }
         Ok(None)
     }
 
     /// Returns `true` if any of the generics is a [`Generic::Lifetime`]
+    #[must_use]
     pub fn has_lifetime(&self) -> bool {
-        self.iter().any(|lt| lt.is_lifetime())
+        self.iter().any(Generic::is_lifetime)
     }
 
     /// Returns an iterator which contains only the simple type generics
     pub fn iter_generics(&self) -> impl Iterator<Item = &SimpleGeneric> {
-        self.iter().filter_map(|g| match g {
-            Generic::Generic(s) => Some(s),
-            _ => None,
+        self.iter().filter_map(|g| {
+            match g {
+                | Generic::Generic(s) => Some(s),
+                | _ => None,
+            }
         })
     }
 
     /// Returns an iterator which contains only the lifetimes
     pub fn iter_lifetimes(&self) -> impl Iterator<Item = &Lifetime> {
-        self.iter().filter_map(|g| match g {
-            Generic::Lifetime(s) => Some(s),
-            _ => None,
+        self.iter().filter_map(|g| {
+            match g {
+                | Generic::Lifetime(s) => Some(s),
+                | _ => None,
+            }
         })
     }
 
     /// Returns an iterator which contains only the const generics
     pub fn iter_consts(&self) -> impl Iterator<Item = &ConstGeneric> {
-        self.iter().filter_map(|g| match g {
-            Generic::Const(s) => Some(s),
-            _ => None,
+        self.iter().filter_map(|g| {
+            match g {
+                | Generic::Const(s) => Some(s),
+                | _ => None,
+            }
         })
     }
 
@@ -122,28 +136,28 @@ impl Generics {
         let mut result = StreamBuilder::new();
         result.punct('<');
         let mut is_first = true;
-        for lt in lifetimes.iter() {
-            if !is_first {
-                result.punct(',');
-            } else {
+        for lt in lifetimes {
+            if is_first {
                 is_first = false;
+            } else {
+                result.punct(',');
             }
             result.lifetime_str(lt);
         }
 
         for generic in self.iter() {
-            if !is_first {
-                result.punct(',');
-            } else {
+            if is_first {
                 is_first = false;
+            } else {
+                result.punct(',');
             }
             generic.append_to_result_with_constraints(&mut result);
         }
         for ty in types {
-            if !is_first {
-                result.punct(',');
-            } else {
+            if is_first {
                 is_first = false;
+            } else {
+                result.punct(',');
             }
             result.ident_str(ty);
         }
@@ -196,7 +210,8 @@ pub enum Generic {
     ///
     /// ```
     /// # use std::marker::PhantomData;
-    /// struct Foo<'a> { // will be Generic::Lifetime("a")
+    /// struct Foo<'a> {
+    ///     // will be Generic::Lifetime("a")
     /// #   a: PhantomData<&'a ()>,
     /// }
     /// ```
@@ -205,7 +220,8 @@ pub enum Generic {
     ///
     /// ```
     /// # use std::marker::PhantomData;
-    /// struct Foo<F> { // will be Generic::Generic("F")
+    /// struct Foo<F> {
+    ///     // will be Generic::Generic("F")
     /// #   a: PhantomData<F>,
     /// }
     /// ```
@@ -213,7 +229,8 @@ pub enum Generic {
     /// A const generic
     ///
     /// ```
-    /// struct Foo<const N: usize> { // will be Generic::Const("N")
+    /// struct Foo<const N: usize> {
+    ///     // will be Generic::Const("N")
     /// #   a: [u8; N],
     /// }
     /// ```
@@ -221,43 +238,47 @@ pub enum Generic {
 }
 
 impl Generic {
-    fn is_lifetime(&self) -> bool {
-        matches!(self, Generic::Lifetime(_))
+    const fn is_lifetime(&self) -> bool {
+        matches!(self, Self::Lifetime(_))
     }
 
     /// The ident of this generic
-    pub fn ident(&self) -> &Ident {
+    #[must_use]
+    pub const fn ident(&self) -> &Ident {
         match self {
-            Self::Lifetime(lt) => &lt.ident,
-            Self::Generic(r#gen) => &r#gen.ident,
-            Self::Const(r#gen) => &r#gen.ident,
+            | Self::Lifetime(lt) => &lt.ident,
+            | Self::Generic(r#gen) => &r#gen.ident,
+            | Self::Const(r#gen) => &r#gen.ident,
         }
     }
 
-    fn has_constraints(&self) -> bool {
+    const fn has_constraints(&self) -> bool {
         match self {
-            Self::Lifetime(lt) => !lt.constraint.is_empty(),
-            Self::Generic(r#gen) => !r#gen.constraints.is_empty(),
-            Self::Const(_) => true, // const generics always have a constraint
+            | Self::Lifetime(lt) => !lt.constraint.is_empty(),
+            | Self::Generic(r#gen) => !r#gen.constraints.is_empty(),
+            | Self::Const(_) => true, // const generics always have a constraint
         }
     }
 
     fn constraints(&self) -> Vec<TokenTree> {
         match self {
-            Self::Lifetime(lt) => lt.constraint.clone(),
-            Self::Generic(r#gen) => r#gen.constraints.clone(),
-            Self::Const(r#gen) => r#gen.constraints.clone(),
+            | Self::Lifetime(lt) => lt.constraint.clone(),
+            | Self::Generic(r#gen) => r#gen.constraints.clone(),
+            | Self::Const(r#gen) => r#gen.constraints.clone(),
         }
     }
 
-    fn append_to_result_with_constraints(&self, builder: &mut StreamBuilder) {
+    fn append_to_result_with_constraints(
+        &self,
+        builder: &mut StreamBuilder,
+    ) {
         match self {
-            Self::Lifetime(lt) => builder.lifetime(lt.ident.clone()),
-            Self::Generic(r#gen) => builder.ident(r#gen.ident.clone()),
-            Self::Const(r#gen) => {
+            | Self::Lifetime(lt) => builder.lifetime(lt.ident.clone()),
+            | Self::Generic(r#gen) => builder.ident(r#gen.ident.clone()),
+            | Self::Const(r#gen) => {
                 builder.ident(r#gen.const_token.clone());
                 builder.ident(r#gen.ident.clone())
-            }
+            },
         };
         if self.has_constraints() {
             builder.punct(':');
@@ -397,24 +418,27 @@ impl Lifetime {
     pub(crate) fn take(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Result<Self> {
         let start = assume_punct(input.next(), '\'');
         let ident = match input.peek() {
-            Some(TokenTree::Ident(_)) => assume_ident(input.next()),
-            Some(t) => return Err(Error::ExpectedIdent(t.span())),
-            None => return Err(Error::ExpectedIdent(start.span())),
+            | Some(TokenTree::Ident(_)) => assume_ident(input.next()),
+            | Some(t) => return Err(Error::ExpectedIdent(t.span())),
+            | None => return Err(Error::ExpectedIdent(start.span())),
         };
 
         let mut constraint = Vec::new();
-        if let Some(TokenTree::Punct(p)) = input.peek() {
-            if p.as_char() == ':' {
-                assume_punct(input.next(), ':');
-                constraint = read_tokens_until_punct(input, &[',', '>'])?;
-            }
+        if let Some(TokenTree::Punct(p)) = input.peek()
+            && p.as_char() == ':'
+        {
+            assume_punct(input.next(), ':');
+            constraint = read_tokens_until_punct(input, &[',', '>'])?;
         }
 
         Ok(Self { ident, constraint })
     }
 
     #[cfg(test)]
-    fn is_ident(&self, s: &str) -> bool {
+    fn is_ident(
+        &self,
+        s: &str,
+    ) -> bool {
         self.ident == s
     }
 }
@@ -477,6 +501,7 @@ impl SimpleGeneric {
     }
 
     /// The name of this generic, e.g. `T`
+    #[must_use]
     pub fn name(&self) -> Ident {
         self.ident.clone()
     }
@@ -498,11 +523,11 @@ impl ConstGeneric {
         let const_token = assume_ident(input.next());
         let ident = assume_ident(input.next());
         let mut constraints = Vec::new();
-        if let Some(TokenTree::Punct(punct)) = input.peek() {
-            if punct.as_char() == ':' {
-                assume_punct(input.next(), ':');
-                constraints = read_tokens_until_punct(input, &['>', ','])?;
-            }
+        if let Some(TokenTree::Punct(punct)) = input.peek()
+            && punct.as_char() == ':'
+        {
+            assume_punct(input.next(), ':');
+            constraints = read_tokens_until_punct(input, &['>', ','])?;
         }
         Ok(Self {
             const_token,
@@ -530,17 +555,17 @@ pub struct GenericConstraints {
 
 impl GenericConstraints {
     pub(crate) fn try_take(
-        input: &mut Peekable<impl Iterator<Item = TokenTree>>,
+        input: &mut Peekable<impl Iterator<Item = TokenTree>>
     ) -> Result<Option<Self>> {
         match input.peek() {
-            Some(TokenTree::Ident(ident)) => {
+            | Some(TokenTree::Ident(ident)) => {
                 if !ident_eq(ident, "where") {
                     return Ok(None);
                 }
-            }
-            _ => {
+            },
+            | _ => {
                 return Ok(None);
-            }
+            },
         }
         input.next();
         let constraints = read_tokens_until_punct(input, &['{', '('])?;
@@ -596,7 +621,10 @@ impl GenericConstraints {
     /// // generic_constraints is now:
     /// // `T: Foo, u32: SomeTrait`
     /// ```
-    pub fn push_parsed_constraint(&mut self, constraint: impl AsRef<str>) -> Result<()> {
+    pub fn push_parsed_constraint(
+        &mut self,
+        constraint: impl AsRef<str>,
+    ) -> Result<()> {
         let mut builder = StreamBuilder::new();
         if !self.constraints.is_empty() {
             builder.punct(',');
@@ -615,7 +643,9 @@ impl GenericConstraints {
 
 #[test]
 fn test_generic_constraints_try_take() {
-    use super::{DataType, StructBody, Visibility};
+    use super::DataType;
+    use super::StructBody;
+    use super::Visibility;
     use crate::parse::body::Fields;
     use crate::token_stream;
 
@@ -662,10 +692,13 @@ fn test_generic_constraints_try_take() {
 
 #[test]
 fn test_generic_constraints_trailing_comma() {
-    use crate::parse::{
-        Attribute, AttributeLocation, DataType, GenericConstraints, Generics, StructBody,
-        Visibility,
-    };
+    use crate::parse::Attribute;
+    use crate::parse::AttributeLocation;
+    use crate::parse::DataType;
+    use crate::parse::GenericConstraints;
+    use crate::parse::Generics;
+    use crate::parse::StructBody;
+    use crate::parse::Visibility;
     use crate::token_stream;
     let source = &mut token_stream("pub struct MyStruct<T> where T: Clone, { }");
 

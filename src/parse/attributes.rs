@@ -1,6 +1,11 @@
-use super::utils::*;
-use crate::prelude::{Delimiter, Group, Punct, TokenTree};
-use crate::{Error, Result};
+use super::utils::assume_group;
+use super::utils::consume_punct_if;
+use crate::Error;
+use crate::Result;
+use crate::prelude::Delimiter;
+use crate::prelude::Group;
+use crate::prelude::Punct;
+use crate::prelude::TokenTree;
 use std::iter::Peekable;
 
 /// An attribute for the given struct, enum, field, etc
@@ -48,25 +53,25 @@ impl Attribute {
 
         while let Some(punct) = consume_punct_if(input, '#') {
             match input.peek() {
-                Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Bracket => {
+                | Some(TokenTree::Group(g)) if g.delimiter() == Delimiter::Bracket => {
                     let group = assume_group(input.next());
-                    result.push(Attribute {
+                    result.push(Self {
                         location,
                         punct,
                         tokens: group,
                     });
-                }
-                Some(TokenTree::Group(g)) => {
+                },
+                | Some(TokenTree::Group(g)) => {
                     return Err(Error::InvalidRustSyntax {
                         span: g.span(),
                         expected: format!("[] bracket, got {:?}", g.delimiter()),
                     });
-                }
-                Some(TokenTree::Punct(p)) if p.as_char() == '#' => {
+                },
+                | Some(TokenTree::Punct(p)) if p.as_char() == '#' => {
                     // sometimes with empty lines of doc comments, we get two #'s in a row
                     // Just ignore this
-                }
-                token => return Error::wrong_token(token, "[] group or next # attribute"),
+                },
+                | token => return Error::wrong_token(token, "[] group or next # attribute"),
             }
         }
         Ok(result)
@@ -85,8 +90,8 @@ fn test_attributes_try_take() {
             .is_empty()
     );
     match stream.next().unwrap() {
-        TokenTree::Ident(i) => assert_eq!(i, "struct"),
-        x => panic!("Expected ident, found {:?}", x),
+        | TokenTree::Ident(i) => assert_eq!(i, "struct"),
+        | x => panic!("Expected ident, found {:?}", x),
     }
 
     let mut ts2 = token_stream("#[cfg(test)] struct Foo;");
@@ -97,8 +102,8 @@ fn test_attributes_try_take() {
             .is_empty()
     );
     match stream.next().unwrap() {
-        TokenTree::Ident(i) => assert_eq!(i, "struct"),
-        x => panic!("Expected ident, found {:?}", x),
+        | TokenTree::Ident(i) => assert_eq!(i, "struct"),
+        | x => panic!("Expected ident, found {:?}", x),
     }
 }
 
@@ -121,7 +126,10 @@ pub trait AttributeAccess {
     /// Check to see if has the given attribute. See [`FromAttribute`] for more information.
     ///
     /// **note**: Will immediately return `Err(_)` on the first error `T` returns.
-    fn has_attribute<T: FromAttribute + PartialEq<T>>(&self, attrib: T) -> Result<bool>;
+    fn has_attribute<T: FromAttribute + PartialEq<T>>(
+        &self,
+        attrib: T,
+    ) -> Result<bool>;
 
     /// Returns the first attribute that returns `Some(Self)`. See [`FromAttribute`] for more information.
     ///
@@ -130,20 +138,23 @@ pub trait AttributeAccess {
 }
 
 impl AttributeAccess for Vec<Attribute> {
-    fn has_attribute<T: FromAttribute + PartialEq<T>>(&self, attrib: T) -> Result<bool> {
-        for attribute in self.iter() {
+    fn has_attribute<T: FromAttribute + PartialEq<T>>(
+        &self,
+        attrib: T,
+    ) -> Result<bool> {
+        for attribute in self {
             let parsed = T::parse(&attribute.tokens)?;
-            if let Some(attribute) = parsed {
-                if attribute == attrib {
-                    return Ok(true);
-                }
+            if let Some(attribute) = parsed
+                && attribute == attrib
+            {
+                return Ok(true);
             }
         }
         Ok(false)
     }
 
     fn get_attribute<T: FromAttribute>(&self) -> Result<Option<T>> {
-        for attribute in self.iter() {
+        for attribute in self {
             if let Some(attribute) = T::parse(&attribute.tokens)? {
                 return Ok(Some(attribute));
             }

@@ -1,7 +1,6 @@
-use crate::{
-    generate::{PushParseError, StreamBuilder},
-    prelude::*,
-};
+use crate::generate::PushParseError;
+use crate::generate::StreamBuilder;
+use crate::prelude::*;
 use std::fmt;
 
 /// Errors that can occur while parsing or generator your derive macro.
@@ -47,10 +46,7 @@ pub enum Error {
 
 impl From<PushParseError> for Error {
     fn from(e: PushParseError) -> Self {
-        Self::PushParse {
-            span: None,
-            error: e,
-        }
+        Self::PushParse { span: None, error: e }
     }
 }
 
@@ -64,7 +60,10 @@ impl Error {
     }
 
     /// Throw a custom error at a given location
-    pub fn custom_at(s: impl Into<String>, span: Span) -> Self {
+    pub fn custom_at(
+        s: impl Into<String>,
+        span: Span,
+    ) -> Self {
         Self::Custom {
             error: s.into(),
             span: Some(span),
@@ -72,7 +71,10 @@ impl Error {
     }
 
     /// Throw a custom error at a given token
-    pub fn custom_at_token(s: impl Into<String>, token: TokenTree) -> Self {
+    pub fn custom_at_token(
+        s: impl Into<String>,
+        token: TokenTree,
+    ) -> Self {
         Self::Custom {
             error: s.into(),
             span: Some(token.span()),
@@ -80,30 +82,40 @@ impl Error {
     }
 
     /// Throw a custom error at a given `Option<TokenTree>`
-    pub fn custom_at_opt_token(s: impl Into<String>, token: Option<TokenTree>) -> Self {
+    pub fn custom_at_opt_token(
+        s: impl Into<String>,
+        token: Option<TokenTree>,
+    ) -> Self {
         Self::Custom {
             error: s.into(),
             span: token.map(|t| t.span()),
         }
     }
 
-    pub(crate) fn wrong_token<T>(token: Option<&TokenTree>, expected: &str) -> Result<T> {
+    pub(crate) fn wrong_token<T>(
+        token: Option<&TokenTree>,
+        expected: &str,
+    ) -> Result<T> {
         Err(Self::InvalidRustSyntax {
-            span: token.map(|t| t.span()).unwrap_or_else(Span::call_site),
-            expected: format!("{}, got {:?}", expected, token),
+            span: token.map_or_else(Span::call_site, proc_macro2::TokenTree::span),
+            expected: format!("{expected}, got {token:?}"),
         })
     }
 
     /// Return a new error that is located at the given span
-    pub fn with_span(mut self, new_span: Span) -> Self {
+    #[must_use]
+    pub const fn with_span(
+        mut self,
+        new_span: Span,
+    ) -> Self {
         match &mut self {
-            Error::UnknownDataType(span) => *span = new_span,
-            Error::InvalidRustSyntax { span, .. } => *span = new_span,
-            Error::ExpectedIdent(span) => *span = new_span,
-            Error::PushParse { span, .. } => {
+            | Self::UnknownDataType(span) => *span = new_span,
+            | Self::InvalidRustSyntax { span, .. } => *span = new_span,
+            | Self::ExpectedIdent(span) => *span = new_span,
+            | Self::PushParse { span, .. } => {
                 *span = Some(new_span);
-            }
-            Error::Custom { span, .. } => *span = Some(new_span),
+            },
+            | Self::Custom { span, .. } => *span = Some(new_span),
         }
 
         self
@@ -125,21 +137,25 @@ impl Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        fmt: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         match self {
-            Self::UnknownDataType(_) => {
+            | Self::UnknownDataType(_) => {
                 write!(fmt, "Unknown data type, only enum and struct are supported")
-            }
-            Self::InvalidRustSyntax { expected, .. } => {
-                write!(fmt, "Invalid rust syntax, expected {}", expected)
-            }
-            Self::ExpectedIdent(_) => write!(fmt, "Expected ident"),
-            Self::PushParse { error, .. } => write!(
-                fmt,
-                "Invalid code passed to `StreamBuilder::push_parsed`: {:?}",
-                error
-            ),
-            Self::Custom { error, .. } => write!(fmt, "{}", error),
+            },
+            | Self::InvalidRustSyntax { expected, .. } => {
+                write!(fmt, "Invalid rust syntax, expected {expected}")
+            },
+            | Self::ExpectedIdent(_) => write!(fmt, "Expected ident"),
+            | Self::PushParse { error, .. } => {
+                write!(
+                    fmt,
+                    "Invalid code passed to `StreamBuilder::push_parsed`: {error:?}"
+                )
+            },
+            | Self::Custom { error, .. } => write!(fmt, "{error}"),
         }
     }
 }
@@ -148,16 +164,20 @@ impl Error {
     /// Turn this error into a [`TokenStream`] so it shows up as a [`compile_error`] for the user.
     pub fn into_token_stream(self) -> TokenStream {
         let maybe_span = match &self {
-            Self::UnknownDataType(span)
+            | Self::UnknownDataType(span)
             | Self::ExpectedIdent(span)
             | Self::InvalidRustSyntax { span, .. } => Some(*span),
-            Self::Custom { span, .. } | Self::PushParse { span, .. } => *span,
+            | Self::Custom { span, .. } | Self::PushParse { span, .. } => *span,
         };
         self.throw_with_span(maybe_span.unwrap_or_else(Span::call_site))
     }
 
     /// Turn this error into a [`TokenStream`] so it shows up as a [`compile_error`] for the user. The error will be shown at the given `span`.
-    pub fn throw_with_span(self, span: Span) -> TokenStream {
+    #[must_use]
+    pub fn throw_with_span(
+        self,
+        span: Span,
+    ) -> TokenStream {
         // compile_error!($message)
         let mut builder = StreamBuilder::new();
         builder.ident_str("compile_error");

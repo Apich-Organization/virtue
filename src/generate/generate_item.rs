@@ -1,8 +1,7 @@
 use super::StreamBuilder;
-use crate::{
-    parse::Visibility,
-    prelude::{Delimiter, Result},
-};
+use crate::parse::Visibility;
+use crate::prelude::Delimiter;
+use crate::prelude::Result;
 
 /// A builder for constants.
 pub struct GenConst<'a> {
@@ -30,14 +29,17 @@ impl<'a> GenConst<'a> {
 
     /// Make the const `pub`. By default the const will have no visibility modifier and will only be visible in the current scope.
     #[must_use]
-    pub fn make_pub(mut self) -> Self {
+    pub const fn make_pub(mut self) -> Self {
         self.vis = Visibility::Pub;
         self
     }
 
     /// Add an outer attribute
     #[must_use]
-    pub fn with_attr(mut self, attr: impl Into<String>) -> Self {
+    pub fn with_attr(
+        mut self,
+        attr: impl Into<String>,
+    ) -> Self {
         self.attrs.push(attr.into());
         self
     }
@@ -47,12 +49,13 @@ impl<'a> GenConst<'a> {
     /// ```
     /// # use virtue::prelude::Generator;
     /// # let mut generator = Generator::with_name("Bar");
-    /// generator.impl_for("Foo")
-    ///          .generate_const("BAR", "u8")
-    ///          .with_value(|b| {
-    ///             b.push_parsed("5")?;
-    ///             Ok(())
-    ///          })?;
+    /// generator
+    ///     .impl_for("Foo")
+    ///     .generate_const("BAR", "u8")
+    ///     .with_value(|b| {
+    ///         b.push_parsed("5")?;
+    ///         Ok(())
+    ///     })?;
     /// # generator.assert_eq("impl Foo for Bar { const BAR : u8 = 5 ; }");
     /// # Ok::<_, virtue::Error>(())
     /// ```
@@ -63,7 +66,10 @@ impl<'a> GenConst<'a> {
     ///     const BAR: u8 = 5;
     /// }
     /// ```
-    pub fn with_value<F>(self, f: F) -> Result
+    pub fn with_value<F>(
+        self,
+        f: F,
+    ) -> Result
     where
         F: FnOnce(&mut StreamBuilder) -> Result,
     {
@@ -113,11 +119,14 @@ pub struct FnBuilder<'a, P> {
 }
 
 impl<'a, P: FnParent> FnBuilder<'a, P> {
-    pub(super) fn new(parent: &'a mut P, name: impl Into<String>) -> Self {
+    pub(super) fn new(
+        parent: &'a mut P,
+        name: impl Into<String>,
+    ) -> Self {
         Self {
             parent,
             name: name.into(),
-            attrs: Vec::new(),
+            attrs: vec!["inline".to_string()],
             is_async: false,
             lifetimes: Vec::new(),
             generics: Vec::new(),
@@ -130,8 +139,18 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
 
     /// Add an outer attribute
     #[must_use]
-    pub fn with_attr(mut self, attr: impl Into<String>) -> Self {
+    pub fn with_attr(
+        mut self,
+        attr: impl Into<String>,
+    ) -> Self {
         self.attrs.push(attr.into());
+        self
+    }
+
+    /// Add `#[inline(always)]` to the function
+    #[must_use]
+    pub fn with_inline_always(mut self) -> Self {
+        self.attrs.push("inline(always)".to_string());
         self
     }
 
@@ -144,11 +163,15 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     ///     .r#impl()
     ///     .generate_fn("foo") // fn foo()
     ///     .with_lifetime("a") // fn foo<'a>()
+    /// //
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo < 'a > () { } }");
     /// ```
     #[must_use]
-    pub fn with_lifetime(mut self, name: impl Into<String>) -> Self {
+    pub fn with_lifetime(
+        mut self,
+        name: impl Into<String>,
+    ) -> Self {
         self.lifetimes.push((name.into(), Vec::new()));
         self
     }
@@ -162,11 +185,12 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     ///     .r#impl()
     ///     .generate_fn("foo") // fn foo()
     ///     .as_async() // async fn foo()
+    /// //
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { async fn foo () { } }");
     /// ```
     #[must_use]
-    pub fn as_async(mut self) -> Self {
+    pub const fn as_async(mut self) -> Self {
         self.is_async = true;
         self
     }
@@ -183,6 +207,7 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     ///     .generate_fn("foo") // fn foo()
     ///     .with_lifetime("a") // fn foo<'a>()
     ///     .with_lifetime_deps("b", ["a"]) // fn foo<'b: 'a>()
+    /// //
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo < 'a , 'b : 'a > () { } }");
     /// ```
@@ -212,11 +237,15 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     ///     .r#impl()
     ///     .generate_fn("foo") // fn foo()
     ///     .with_generic("D") // fn foo<D>()
+    /// //
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo < D > () { } }");
     /// ```
     #[must_use]
-    pub fn with_generic(mut self, name: impl Into<String>) -> Self {
+    pub fn with_generic(
+        mut self,
+        name: impl Into<String>,
+    ) -> Self {
         self.generics.push((name.into(), Vec::new()));
         self
     }
@@ -233,11 +262,16 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     ///     .generate_fn("foo") // fn foo()
     ///     .with_generic("D") // fn foo<D>()
     ///     .with_generic_deps("E", ["Encodable"]) // fn foo<D, E: Encodable>();
+    /// //
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo < D , E : Encodable > () { } }");
     /// ```
     #[must_use]
-    pub fn with_generic_deps<DEP, I>(mut self, name: impl Into<String>, dependencies: DEP) -> Self
+    pub fn with_generic_deps<DEP, I>(
+        mut self,
+        name: impl Into<String>,
+        dependencies: DEP,
+    ) -> Self
     where
         DEP: IntoIterator<Item = I>,
         I: Into<String>,
@@ -249,7 +283,7 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
         self
     }
 
-    /// Set the value for `self`. See [FnSelfArg] for more information.
+    /// Set the value for `self`. See [`FnSelfArg`] for more information.
     ///
     /// ```
     /// # use virtue::prelude::{Generator, FnSelfArg};
@@ -258,11 +292,15 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     ///     .r#impl()
     ///     .generate_fn("foo") // fn foo()
     ///     .with_self_arg(FnSelfArg::RefSelf) // fn foo(&self)
+    /// //
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo (& self ,) { } }");
     /// ```
     #[must_use]
-    pub fn with_self_arg(mut self, self_arg: FnSelfArg) -> Self {
+    pub const fn with_self_arg(
+        mut self,
+        self_arg: FnSelfArg,
+    ) -> Self {
         self.self_arg = self_arg;
         self
     }
@@ -277,11 +315,16 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     ///     .generate_fn("foo") // fn foo()
     ///     .with_arg("a", "u32") // fn foo(a: u32)
     ///     .with_arg("b", "u32") // fn foo(a: u32, b: u32)
+    /// //
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo (a : u32 , b : u32) { } }");
     /// ```
     #[must_use]
-    pub fn with_arg(mut self, name: impl Into<String>, ty: impl Into<String>) -> Self {
+    pub fn with_arg(
+        mut self,
+        name: impl Into<String>,
+        ty: impl Into<String>,
+    ) -> Self {
         self.args.push((name.into(), ty.into()));
         self
     }
@@ -295,18 +338,22 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
     ///     .r#impl()
     ///     .generate_fn("foo") // fn foo()
     ///     .with_return_type("u32") // fn foo() -> u32
+    /// //
     /// # .body(|_| Ok(())).unwrap();
     /// # generator.assert_eq("impl Foo { fn foo () ->u32 { } }");
     /// ```
     #[must_use]
-    pub fn with_return_type(mut self, ret_type: impl Into<String>) -> Self {
+    pub fn with_return_type(
+        mut self,
+        ret_type: impl Into<String>,
+    ) -> Self {
         self.return_type = Some(ret_type.into());
         self
     }
 
     /// Make the function `pub`. If this is not called, the function will have no visibility modifier.
     #[must_use]
-    pub fn make_pub(mut self) -> Self {
+    pub const fn make_pub(mut self) -> Self {
         self.vis = Visibility::Pub;
         self
     }
@@ -432,7 +479,11 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
 }
 
 pub trait FnParent {
-    fn append(&mut self, fn_definition: StreamBuilder, fn_body: StreamBuilder) -> Result;
+    fn append(
+        &mut self,
+        fn_definition: StreamBuilder,
+        fn_body: StreamBuilder,
+    ) -> Result;
 }
 
 /// The `self` argument of a function
@@ -459,23 +510,23 @@ impl FnSelfArg {
     fn into_token_tree(self) -> Option<StreamBuilder> {
         let mut builder = StreamBuilder::new();
         match self {
-            Self::None => return None,
-            Self::TakeSelf => {
+            | Self::None => return None,
+            | Self::TakeSelf => {
                 builder.ident_str("self");
-            }
-            Self::MutTakeSelf => {
+            },
+            | Self::MutTakeSelf => {
                 builder.ident_str("mut");
                 builder.ident_str("self");
-            }
-            Self::RefSelf => {
+            },
+            | Self::RefSelf => {
                 builder.punct('&');
                 builder.ident_str("self");
-            }
-            Self::MutSelf => {
+            },
+            | Self::MutSelf => {
                 builder.punct('&');
                 builder.ident_str("mut");
                 builder.ident_str("self");
-            }
+            },
         }
         Some(builder)
     }

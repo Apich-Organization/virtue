@@ -1,10 +1,20 @@
-use super::{
-    AttributeContainer, Field, FieldBuilder, Impl, ImplFor, Parent, Path, StreamBuilder,
-    StringOrIdent,
-};
+use super::AttributeContainer;
+use super::Field;
+use super::FieldBuilder;
+use super::Impl;
+use super::ImplFor;
+use super::Parent;
+use super::Path;
+use super::StreamBuilder;
+use super::StringOrIdent;
 use crate::Result;
-use crate::parse::{Generic, Generics, Visibility};
-use crate::prelude::{Delimiter, Ident, Span, TokenStream};
+use crate::parse::Generic;
+use crate::parse::Generics;
+use crate::parse::Visibility;
+use crate::prelude::Delimiter;
+use crate::prelude::Ident;
+use crate::prelude::Span;
+use crate::prelude::TokenStream;
 
 /// Builder to generate a struct.
 /// Defaults to a struct with named fields `struct <Name> { <field>: <ty>, ... }`
@@ -21,7 +31,10 @@ pub struct GenStruct<'a, P: Parent> {
 }
 
 impl<'a, P: Parent> GenStruct<'a, P> {
-    pub(crate) fn new(parent: &'a mut P, name: impl Into<String>) -> Self {
+    pub(crate) fn new(
+        parent: &'a mut P,
+        name: impl Into<String>,
+    ) -> Self {
         Self {
             parent,
             name: Ident::new(name.into().as_str(), Span::call_site()),
@@ -55,7 +68,7 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// ```
     /// struct Foo;
     /// ```
-    pub fn make_zst(&mut self) -> &mut Self {
+    pub const fn make_zst(&mut self) -> &mut Self {
         self.struct_type = StructType::Zst;
         self
     }
@@ -80,13 +93,13 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// ```
     /// struct Foo(u16, String);
     /// ```
-    pub fn make_tuple(&mut self) -> &mut Self {
+    pub const fn make_tuple(&mut self) -> &mut Self {
         self.struct_type = StructType::Unnamed;
         self
     }
 
     /// Make the struct `pub`. By default the struct will have no visibility modifier and will only be visible in the current scope.
-    pub fn make_pub(&mut self) -> &mut Self {
+    pub const fn make_pub(&mut self) -> &mut Self {
         self.visibility = Visibility::Pub;
         self
     }
@@ -126,7 +139,11 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// # let mut generator = Generator::with_name("Bar").with_lifetime("a");
     /// generator
     ///     .generate_struct("Foo")
-    ///     .with_generics([Lifetime { ident: Ident::new("a", Span::call_site()), constraint: vec![] }.into()])
+    ///     .with_generics([Lifetime {
+    ///         ident: Ident::new("a", Span::call_site()),
+    ///         constraint: vec![],
+    ///     }
+    ///     .into()])
     ///     .add_field("bar", "&'a str");
     /// # generator.assert_eq("struct Foo < 'a > { bar : &'a str , }");
     /// # Ok::<_, virtue::Error>(())
@@ -138,7 +155,10 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     ///     bar: &'a str
     /// }
     /// ```
-    pub fn with_generics(&mut self, generics: impl IntoIterator<Item = Generic>) -> &mut Self {
+    pub fn with_generics(
+        &mut self,
+        generics: impl IntoIterator<Item = Generic>,
+    ) -> &mut Self {
         self.generics
             .get_or_insert_with(|| Generics(Vec::new()))
             .extend(generics);
@@ -154,7 +174,13 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// # let mut generator = Generator::with_name("Bar").with_lifetime("a");
     /// generator
     ///     .generate_struct("Foo")
-    ///     .with_generic(Lifetime { ident: Ident::new("a", Span::call_site()), constraint: vec![] }.into())
+    ///     .with_generic(
+    ///         Lifetime {
+    ///             ident: Ident::new("a", Span::call_site()),
+    ///             constraint: vec![],
+    ///         }
+    ///         .into(),
+    ///     )
     ///     .add_field("bar", "&'a str");
     /// # generator.assert_eq("struct Foo < 'a > { bar : &'a str , }");
     /// # Ok::<_, virtue::Error>(())
@@ -166,7 +192,10 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     ///     bar: &'a str
     /// }
     /// ```
-    pub fn with_generic(&mut self, generic: Generic) -> &mut Self {
+    pub fn with_generic(
+        &mut self,
+        generic: Generic,
+    ) -> &mut Self {
         self.generics
             .get_or_insert_with(|| Generics(Vec::new()))
             .push(generic);
@@ -193,7 +222,10 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// #[derive(Clone, Default, serde::Deserialize)]
     /// struct Foo { }
     /// ```
-    pub fn with_derive(&mut self, derive: impl Into<Path>) -> &mut Self {
+    pub fn with_derive(
+        &mut self,
+        derive: impl Into<Path>,
+    ) -> &mut Self {
         AttributeContainer::with_derive(self, derive)
     }
 
@@ -273,7 +305,10 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// #[serde(rename_all = "camelCase")]
     /// struct Foo { }
     /// ```
-    pub fn with_parsed_attribute(&mut self, attribute: impl AsRef<str>) -> Result<&mut Self> {
+    pub fn with_parsed_attribute(
+        &mut self,
+        attribute: impl AsRef<str>,
+    ) -> Result<&mut Self> {
         AttributeContainer::with_parsed_attribute(self, attribute)
     }
 
@@ -285,7 +320,9 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// # use std::str::FromStr;
     /// # let mut generator = Generator::with_name("Bar");
     ///
-    /// let attribute = "serde(rename_all = \"camelCase\")".parse::<TokenStream>().unwrap();
+    /// let attribute = "serde(rename_all = \"camelCase\")"
+    ///     .parse::<TokenStream>()
+    ///     .unwrap();
     /// generator
     ///     .generate_struct("Foo")
     ///     .with_attribute_stream(attribute);
@@ -298,7 +335,10 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     /// #[serde(rename_all = "camelCase")]
     /// struct Foo { }
     /// ```
-    pub fn with_attribute_stream(&mut self, attribute: impl Into<TokenStream>) -> &mut Self {
+    pub fn with_attribute_stream(
+        &mut self,
+        attribute: impl Into<TokenStream>,
+    ) -> &mut Self {
         AttributeContainer::with_attribute_stream(self, attribute)
     }
 
@@ -335,7 +375,10 @@ impl<'a, P: Parent> GenStruct<'a, P> {
     }
 
     /// Add an `impl <name> for <struct>`
-    pub fn impl_for(&mut self, name: impl Into<StringOrIdent>) -> ImplFor<'_, Self> {
+    pub fn impl_for(
+        &mut self,
+        name: impl Into<StringOrIdent>,
+    ) -> ImplFor<'_, Self> {
         ImplFor::new(self, name.into(), None)
     }
 
@@ -364,8 +407,11 @@ impl<P: Parent> AttributeContainer for GenStruct<'_, P> {
     }
 }
 
-impl<'a, P: Parent> Parent for GenStruct<'a, P> {
-    fn append(&mut self, builder: StreamBuilder) {
+impl<P: Parent> Parent for GenStruct<'_, P> {
+    fn append(
+        &mut self,
+        builder: StreamBuilder,
+    ) {
         self.additional.push(builder);
     }
 
@@ -382,7 +428,7 @@ impl<'a, P: Parent> Parent for GenStruct<'a, P> {
     }
 }
 
-impl<'a, P: Parent> Drop for GenStruct<'a, P> {
+impl<P: Parent> Drop for GenStruct<'_, P> {
     fn drop(&mut self) {
         use std::mem::take;
         let mut builder = StreamBuilder::new();
@@ -400,35 +446,39 @@ impl<'a, P: Parent> Drop for GenStruct<'a, P> {
         );
 
         match self.struct_type {
-            StructType::Named => builder
-                .group(Delimiter::Brace, |b| {
-                    for field in self.fields.iter_mut() {
-                        field.build_attributes(b);
-                        if field.vis == Visibility::Pub {
-                            b.ident_str("pub");
+            | StructType::Named => {
+                builder
+                    .group(Delimiter::Brace, |b| {
+                        for field in &mut self.fields {
+                            field.build_attributes(b);
+                            if field.vis == Visibility::Pub {
+                                b.ident_str("pub");
+                            }
+                            b.ident_str(&field.name)
+                                .punct(':')
+                                .push_parsed(&field.ty)?
+                                .punct(',');
                         }
-                        b.ident_str(&field.name)
-                            .punct(':')
-                            .push_parsed(&field.ty)?
-                            .punct(',');
-                    }
-                    Ok(())
-                })
-                .expect("Could not build struct"),
-            StructType::Unnamed => builder
-                .group(Delimiter::Parenthesis, |b| {
-                    for field in self.fields.iter_mut() {
-                        field.build_attributes(b);
-                        if field.vis == Visibility::Pub {
-                            b.ident_str("pub");
+                        Ok(())
+                    })
+                    .expect("Could not build struct")
+            },
+            | StructType::Unnamed => {
+                builder
+                    .group(Delimiter::Parenthesis, |b| {
+                        for field in &mut self.fields {
+                            field.build_attributes(b);
+                            if field.vis == Visibility::Pub {
+                                b.ident_str("pub");
+                            }
+                            b.push_parsed(&field.ty)?.punct(',');
                         }
-                        b.push_parsed(&field.ty)?.punct(',');
-                    }
-                    Ok(())
-                })
-                .expect("Could not build struct")
-                .punct(';'),
-            StructType::Zst => builder.punct(';'),
+                        Ok(())
+                    })
+                    .expect("Could not build struct")
+                    .punct(';')
+            },
+            | StructType::Zst => builder.punct(';'),
         };
 
         for additional in take(&mut self.additional) {

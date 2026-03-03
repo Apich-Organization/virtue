@@ -132,11 +132,18 @@ pub use self::error::Error;
 
 /// Useful includes
 pub mod prelude {
-    pub use crate::generate::{FnSelfArg, Generator, StreamBuilder};
-    pub use crate::parse::{
-        AttributeAccess, Body, EnumVariant, Fields, FromAttribute, Parse, UnnamedField,
-    };
-    pub use crate::{Error, Result};
+    pub use crate::Error;
+    pub use crate::Result;
+    pub use crate::generate::FnSelfArg;
+    pub use crate::generate::Generator;
+    pub use crate::generate::StreamBuilder;
+    pub use crate::parse::AttributeAccess;
+    pub use crate::parse::Body;
+    pub use crate::parse::EnumVariant;
+    pub use crate::parse::Fields;
+    pub use crate::parse::FromAttribute;
+    pub use crate::parse::Parse;
+    pub use crate::parse::UnnamedField;
 
     #[cfg(any(test, feature = "proc-macro2"))]
     pub use proc_macro2::*;
@@ -149,7 +156,7 @@ pub mod prelude {
 
 #[cfg(test)]
 pub(crate) fn token_stream(
-    s: &str,
+    s: &str
 ) -> std::iter::Peekable<impl Iterator<Item = proc_macro2::TokenTree> + use<>> {
     use std::str::FromStr;
 

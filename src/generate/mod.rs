@@ -21,27 +21,34 @@ mod r#impl;
 mod impl_for;
 mod stream_builder;
 
+use crate::parse::GenericConstraints;
+use crate::parse::Generics;
 use crate::parse::Visibility;
-use crate::{
-    parse::{GenericConstraints, Generics},
-    prelude::{Delimiter, Ident, TokenStream},
-};
+use crate::prelude::Delimiter;
+use crate::prelude::Ident;
+use crate::prelude::TokenStream;
 use std::fmt;
 use std::marker::PhantomData;
 
 pub use self::gen_enum::GenEnum;
 pub use self::gen_struct::GenStruct;
-pub use self::generate_item::{FnBuilder, FnSelfArg, GenConst};
+pub use self::generate_item::FnBuilder;
+pub use self::generate_item::FnSelfArg;
+pub use self::generate_item::GenConst;
 pub use self::generate_mod::GenerateMod;
 pub use self::generator::Generator;
 pub use self::r#impl::Impl;
 pub use self::impl_for::ImplFor;
-pub use self::stream_builder::{PushParseError, StreamBuilder};
+pub use self::stream_builder::PushParseError;
+pub use self::stream_builder::StreamBuilder;
 
 /// Helper trait to make it possible to nest several builders. Internal use only.
 #[allow(missing_docs)]
 pub trait Parent {
-    fn append(&mut self, builder: StreamBuilder);
+    fn append(
+        &mut self,
+        builder: StreamBuilder,
+    );
     fn name(&self) -> &Ident;
     fn generics(&self) -> Option<&Generics>;
     fn generic_constraints(&self) -> Option<&GenericConstraints>;
@@ -57,10 +64,13 @@ pub enum StringOrIdent {
 }
 
 impl fmt::Display for StringOrIdent {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         match self {
-            Self::String(s) => s.fmt(f),
-            Self::Ident(i) => i.fmt(f),
+            | Self::String(s) => s.fmt(f),
+            | Self::Ident(i) => i.fmt(f),
         }
     }
 }
@@ -133,8 +143,8 @@ impl FromIterator<StringOrIdent> for Path {
 }
 
 impl IntoIterator for Path {
-    type Item = StringOrIdent;
     type IntoIter = std::vec::IntoIter<StringOrIdent>;
+    type Item = StringOrIdent;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
@@ -150,7 +160,11 @@ struct Field {
 }
 
 impl Field {
-    fn new(name: impl Into<String>, vis: Visibility, ty: impl Into<String>) -> Self {
+    fn new(
+        name: impl Into<String>,
+        vis: Visibility,
+        ty: impl Into<String>,
+    ) -> Self {
         Self {
             name: name.into(),
             vis,
@@ -280,7 +294,10 @@ impl<P> FieldBuilder<'_, P> {
     ///     pub bar: u16
     /// }
     /// ```
-    pub fn with_attribute_stream(&mut self, attribute: impl Into<TokenStream>) -> &mut Self {
+    pub fn with_attribute_stream(
+        &mut self,
+        attribute: impl Into<TokenStream>,
+    ) -> &mut Self {
         self.current().with_attribute_stream(attribute);
         self
     }
@@ -302,17 +319,21 @@ impl<P> FieldBuilder<'_, P> {
     /// ```
     /// struct Foo {
     ///     foo: u16,
-    ///     bar: bool
+    ///     bar: bool,
     /// }
     /// ```
-    pub fn add_field(&mut self, name: impl Into<String>, ty: impl Into<String>) -> &mut Self {
+    pub fn add_field(
+        &mut self,
+        name: impl Into<String>,
+        ty: impl Into<String>,
+    ) -> &mut Self {
         self.fields.push(Field::new(name, Visibility::Default, ty));
         self
     }
 }
 
 // Only allow `pub` on struct fields
-impl<'a, P: Parent> FieldBuilder<'_, GenStruct<'a, P>> {
+impl<P: Parent> FieldBuilder<'_, GenStruct<'_, P>> {
     /// Make the field public.
     pub fn make_pub(&mut self) -> &mut Self {
         self.current().vis = Visibility::Pub;
@@ -341,12 +362,18 @@ trait AttributeContainer {
     fn derives(&mut self) -> &mut Vec<Path>;
     fn attributes(&mut self) -> &mut Vec<StreamBuilder>;
 
-    fn with_derive(&mut self, derive: impl Into<Path>) -> &mut Self {
+    fn with_derive(
+        &mut self,
+        derive: impl Into<Path>,
+    ) -> &mut Self {
         self.derives().push(derive.into());
         self
     }
 
-    fn with_derives<T: Into<Path>>(&mut self, derives: impl IntoIterator<Item = T>) -> &mut Self {
+    fn with_derives<T: Into<Path>>(
+        &mut self,
+        derives: impl IntoIterator<Item = T>,
+    ) -> &mut Self {
         self.derives().extend(derives.into_iter().map(Into::into));
         self
     }
@@ -362,14 +389,20 @@ trait AttributeContainer {
         Ok(self)
     }
 
-    fn with_parsed_attribute(&mut self, attribute: impl AsRef<str>) -> crate::Result<&mut Self> {
+    fn with_parsed_attribute(
+        &mut self,
+        attribute: impl AsRef<str>,
+    ) -> crate::Result<&mut Self> {
         let mut stream = StreamBuilder::new();
         stream.push_parsed(attribute)?;
         self.attributes().push(stream);
         Ok(self)
     }
 
-    fn with_attribute_stream(&mut self, attribute: impl Into<TokenStream>) -> &mut Self {
+    fn with_attribute_stream(
+        &mut self,
+        attribute: impl Into<TokenStream>,
+    ) -> &mut Self {
         let stream = StreamBuilder {
             stream: attribute.into(),
         };
@@ -377,7 +410,10 @@ trait AttributeContainer {
         self
     }
 
-    fn build_derives(&mut self, b: &mut StreamBuilder) -> &mut Self {
+    fn build_derives(
+        &mut self,
+        b: &mut StreamBuilder,
+    ) -> &mut Self {
         let derives = std::mem::take(self.derives());
         if !derives.is_empty() {
             build_attribute(b, |b| {
@@ -392,8 +428,8 @@ trait AttributeContainer {
                             }
 
                             match component {
-                                StringOrIdent::String(s) => b.ident_str(s),
-                                StringOrIdent::Ident(i) => b.ident(i),
+                                | StringOrIdent::String(s) => b.ident_str(s),
+                                | StringOrIdent::Ident(i) => b.ident(i),
                             };
                         }
                     }
@@ -405,7 +441,10 @@ trait AttributeContainer {
         self
     }
 
-    fn build_attributes(&mut self, b: &mut StreamBuilder) -> &mut Self {
+    fn build_attributes(
+        &mut self,
+        b: &mut StreamBuilder,
+    ) -> &mut Self {
         for attr in std::mem::take(self.attributes()) {
             build_attribute(b, |b| Ok(b.extend(attr.stream))).expect("could not build attribute");
         }
@@ -423,7 +462,10 @@ impl AttributeContainer for Field {
     }
 }
 
-fn build_attribute<T>(b: &mut StreamBuilder, build: T) -> crate::Result
+fn build_attribute<T>(
+    b: &mut StreamBuilder,
+    build: T,
+) -> crate::Result
 where
     T: FnOnce(&mut StreamBuilder) -> crate::Result<&mut StreamBuilder>,
 {

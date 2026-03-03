@@ -1,8 +1,13 @@
-use super::{FnBuilder, GenConst, Generator, Parent, StreamBuilder, generate_item::FnParent};
-use crate::{
-    parse::{GenericConstraints, Generics},
-    prelude::{Delimiter, Result},
-};
+use super::FnBuilder;
+use super::GenConst;
+use super::Generator;
+use super::Parent;
+use super::StreamBuilder;
+use super::generate_item::FnParent;
+use crate::parse::GenericConstraints;
+use crate::parse::Generics;
+use crate::prelude::Delimiter;
+use crate::prelude::Result;
 
 #[must_use]
 /// A helper struct for implementing functions for a given struct or enum.
@@ -30,7 +35,10 @@ impl<'a, P: Parent> Impl<'a, P> {
         }
     }
 
-    pub(super) fn new(parent: &'a mut P, name: impl Into<String>) -> Self {
+    pub(super) fn new(
+        parent: &'a mut P,
+        name: impl Into<String>,
+    ) -> Self {
         Self {
             outer_attr: Vec::new(),
             inner_attr: Vec::new(),
@@ -43,7 +51,10 @@ impl<'a, P: Parent> Impl<'a, P> {
     }
 
     /// Add a outer attribute to the trait implementation
-    pub fn impl_outer_attr(&mut self, attr: impl AsRef<str>) -> Result {
+    pub fn impl_outer_attr(
+        &mut self,
+        attr: impl AsRef<str>,
+    ) -> Result {
         let mut builder = StreamBuilder::new();
         builder.punct('#').group(Delimiter::Bracket, |builder| {
             builder.push_parsed(attr)?;
@@ -54,7 +65,10 @@ impl<'a, P: Parent> Impl<'a, P> {
     }
 
     /// Add a inner attribute to the trait implementation
-    pub fn impl_inner_attr(&mut self, attr: impl AsRef<str>) -> Result {
+    pub fn impl_inner_attr(
+        &mut self,
+        attr: impl AsRef<str>,
+    ) -> Result {
         let mut builder = StreamBuilder::new();
         builder
             .punct('#')
@@ -78,7 +92,10 @@ impl<'a, P: Parent> Impl<'a, P> {
     /// ```
     ///
     /// See [`FnBuilder`] for more options, as well as information on how to fill the function body.
-    pub fn generate_fn(&mut self, name: impl Into<String>) -> FnBuilder<'_, Self> {
+    pub fn generate_fn(
+        &mut self,
+        name: impl Into<String>,
+    ) -> FnBuilder<'_, Self> {
         FnBuilder::new(self, name)
     }
 
@@ -86,12 +103,13 @@ impl<'a, P: Parent> Impl<'a, P> {
     /// ```
     /// # use virtue::prelude::Generator;
     /// # let mut generator = Generator::with_name("Bar");
-    /// generator.impl_for("Foo")
-    ///          .generate_const("BAR", "u8")
-    ///          .with_value(|b| {
-    ///             b.push_parsed("5")?;
-    ///             Ok(())
-    ///          })?;
+    /// generator
+    ///     .impl_for("Foo")
+    ///     .generate_const("BAR", "u8")
+    ///     .with_value(|b| {
+    ///         b.push_parsed("5")?;
+    ///         Ok(())
+    ///     })?;
     /// # generator.assert_eq("impl Foo for Bar { const BAR : u8 = 5 ; }");
     /// # Ok::<_, virtue::Error>(())
     /// ```
@@ -110,7 +128,7 @@ impl<'a, P: Parent> Impl<'a, P> {
     }
 }
 
-impl<'a> Impl<'a, Generator> {
+impl Impl<'_, Generator> {
     /// Modify the generic constraints of a type.
     /// This can be used to add additional type constraints to your implementation.
     ///
@@ -138,7 +156,10 @@ impl<'a> Impl<'a, Generator> {
     /// ```
     ///
     /// Note that this function is only implemented when you call `.r#impl` on [`Generator`].
-    pub fn modify_generic_constraints<CB>(&mut self, cb: CB) -> &mut Self
+    pub fn modify_generic_constraints<CB>(
+        &mut self,
+        cb: CB,
+    ) -> &mut Self
     where
         CB: FnOnce(&Generics, &mut GenericConstraints),
     {
@@ -155,14 +176,18 @@ impl<'a> Impl<'a, Generator> {
     }
 }
 
-impl<'a, P: Parent> FnParent for Impl<'a, P> {
-    fn append(&mut self, fn_definition: StreamBuilder, fn_body: StreamBuilder) -> Result {
+impl<P: Parent> FnParent for Impl<'_, P> {
+    fn append(
+        &mut self,
+        fn_definition: StreamBuilder,
+        fn_body: StreamBuilder,
+    ) -> Result {
         self.fns.push((fn_definition, fn_body));
         Ok(())
     }
 }
 
-impl<'a, P: Parent> Drop for Impl<'a, P> {
+impl<P: Parent> Drop for Impl<'_, P> {
     fn drop(&mut self) {
         if std::thread::panicking() {
             return;
@@ -182,14 +207,14 @@ impl<'a, P: Parent> Drop for Impl<'a, P> {
             builder.append(generics.type_generics());
         }
         match self.custom_generic_constraints.take() {
-            Some(generic_constraints) => {
+            | Some(generic_constraints) => {
                 builder.append(generic_constraints.where_clause());
-            }
-            _ => {
+            },
+            | _ => {
                 if let Some(generic_constraints) = self.parent.generic_constraints() {
                     builder.append(generic_constraints.where_clause());
                 }
-            }
+            },
         }
 
         builder
