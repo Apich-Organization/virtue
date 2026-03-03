@@ -4,7 +4,7 @@ version = "0.1.2"
 edition = "2024"
 description = "A sinless derive macro helper"
 license = "MIT or Apache-2.0"
-documentation = "https://docs.rs/virtue"
+documentation = "https://docs.rs/virtue-next"
 repository = "https://github.com/Apich-Organization/virtue"
 readme = "README.md"
 

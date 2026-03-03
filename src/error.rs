@@ -102,7 +102,7 @@ impl Error {
         expected: &str,
     ) -> Result<T> {
         Err(Self::InvalidRustSyntax {
-            span: token.map_or_else(Span::call_site, proc_macro2::TokenTree::span),
+            span: token.map_or_else(Span::call_site, TokenTree::span),
             expected: format!("{expected}, got {token:?}"),
         })
     }

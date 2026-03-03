@@ -64,7 +64,7 @@ impl Generics {
                     },
                     | x => {
                         return Err(Error::InvalidRustSyntax {
-                            span: x.map_or_else(|| punct.span(), proc_macro2::TokenTree::span),
+                            span: x.map_or_else(|| punct.span(), TokenTree::span),
                             expected: format!("', > or an ident, got {x:?}"),
                         });
                     },
