@@ -133,7 +133,7 @@ impl<'a, P: Parent> ImplFor<'a, P> {
         self.trait_generics = Some(generics.into_iter().map(Into::into).collect());
         self
     }
-    ///
+
     /// # Errors
     ///
     /// Returns an error if the operation fails.
@@ -229,7 +229,7 @@ impl<'a, P: Parent> ImplFor<'a, P> {
     ) -> GenConst<'_> {
         GenConst::new(&mut self.consts, name, ty)
     }
-    ///
+
     /// # Errors
     ///
     /// Returns an error if the operation fails.

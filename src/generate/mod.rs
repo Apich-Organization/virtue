@@ -181,7 +181,6 @@ pub struct FieldBuilder<'a, P> {
 }
 
 impl<P> FieldBuilder<'_, P> {
-    ///
     /// # Errors
     ///
     /// Returns an error if the operation fails.
@@ -233,7 +232,7 @@ impl<P> FieldBuilder<'_, P> {
         self.current().with_attribute(name, value)?;
         Ok(self)
     }
-    ///
+
     /// # Errors
     ///
     /// Returns an error if the operation fails.

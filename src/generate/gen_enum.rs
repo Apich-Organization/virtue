@@ -614,7 +614,7 @@ impl EnumValue {
     ) -> &mut Self {
         AttributeContainer::with_attribute_stream(self, attribute)
     }
-    ///
+
     /// # Panics
     ///
     /// Panics if internal invariants are violated.

@@ -219,7 +219,7 @@ impl Generator {
         }
         false
     }
-    ///
+
     /// # Errors
     ///
     /// Returns an error if the operation fails.

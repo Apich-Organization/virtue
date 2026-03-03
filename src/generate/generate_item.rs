@@ -405,7 +405,7 @@ impl<'a, P: FnParent> FnBuilder<'a, P> {
         self.vis = Visibility::Pub;
         self
     }
-    ///
+
     /// # Errors
     ///
     /// Returns an error if the operation fails.

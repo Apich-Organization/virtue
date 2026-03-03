@@ -86,7 +86,7 @@ impl StreamBuilder {
         self.stream.extend([TokenTree::Ident(ident)]);
         self
     }
-    ///
+
     /// # Errors
     ///
     /// Returns an error if the operation fails.
@@ -102,7 +102,7 @@ impl StreamBuilder {
         ))]);
         self
     }
-    ///
+
     /// # Errors
     ///
     /// Returns an error if the operation fails.

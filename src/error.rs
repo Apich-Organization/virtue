@@ -131,7 +131,6 @@ impl Error {
 // helper functions for the unit tests
 #[cfg(test)]
 impl Error {
-    ///
     /// # Errors
     ///
     /// Returns an error if the operation fails.
@@ -139,7 +138,7 @@ impl Error {
     pub fn is_unknown_data_type(&self) -> bool {
         matches!(self, Error::UnknownDataType(_))
     }
-    ///
+
     /// # Errors
     ///
     /// Returns an error if the operation fails.
