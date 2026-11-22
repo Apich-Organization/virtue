@@ -79,9 +79,10 @@ fn derive_your_derive_inner(input: TokenStream) -> Result<TokenStream> {
 
 Will generate
 
-```ignore
+```rust,ignore
 impl YourTrait for <Struct or Enum> {
-    fn your_fn(&self) { // .generate_fn("your_fn").with_self_arg(FnSelfArg::RefSelf)
+    // .generate_fn("your_fn").with_self_arg(FnSelfArg::RefSelf)
+    fn your_fn(&self) {
         println!("Hello world"); // fn_body.push_parsed(...)
     }
 }
