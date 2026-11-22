@@ -32,10 +32,8 @@ Fuck off and worst regards, The Bincode Team
 - As much typesystem checking as possible
 - Build for modern rust: 1.57 and up
 - Build with popular crates in mind:
-  - [bincode](https://docs.rs/bincode)
-- Will always respect semver. Minor releases will never have:
-  - Breaking API changes
-  - MSRV changes
+  - [bincode-next](https://docs.rs/bincode-next)
+- Will always respect semver. Minor releases will never have Breaking API changes
 
 ## Example
 
